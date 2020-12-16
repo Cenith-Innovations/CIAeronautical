@@ -9,8 +9,8 @@
 import Foundation
 import Combine
 
+///Avian Hazard Advisory System
 @available(OSX 10.15, *)
-/// Classy way to download the AHAS bird conditions.
 public class AhasAPI: ObservableObject {
     
     /// A shared instance of the AhasAPI, used to link the @Published ahasStore so your user-interface will automatically update when this updates with a new AHAS BirdCondition.
