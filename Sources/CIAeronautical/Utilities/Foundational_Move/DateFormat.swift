@@ -10,6 +10,7 @@ import Foundation
 
 public enum DateFormat {
     case reference
+    case ahas
     
     @available(*, deprecated, renamed: "value")
     public var rawValue: String {
@@ -19,6 +20,7 @@ public enum DateFormat {
     public var value: String {
         switch self {
         case .reference: return "yyyyMMddHHmmss"
+        case .ahas: return "yyyy'-'MM'-'dd' 'HH':'mm':'ss.sss"
         }
     }
 }
