@@ -14,11 +14,12 @@ import Combine
 /// Classy way to download the TAF
 public class TafAPI: ObservableObject {
     
-    /// A shared instance of the TafAPI, used to link the @Published tafStore so your userinterface will automatically update when this updates with a new TAF.
+    /// A shared instance of the TafAPI, used to link the @Published tafStore so your user-interface will automatically update when this updates with a new TAF.
     static public var shared = TafAPI()
     
     /// New School way of getting the TAF
     public var store = PassthroughSubject<[Taf], Never>()
+    @Published var store_: [Taf] = []
     
     private static let session: URLSession = { URLSession(configuration: .default) }()
     
@@ -28,9 +29,18 @@ public class TafAPI: ObservableObject {
         let url = AddsWeatherAPI().weatherURL(type: .taf, icao: "\(icao)")
         let request = URLRequest(url: url)
         let task = session.dataTask(with: request) { (data, response, error) -> Void in
+            print(response)
             if let XMLData = data {
                 let currentTafs = TafParser(data: XMLData).tafs
                 TafAPI.shared.store.send(currentTafs)
+                // TODO:⚠️ Theres a better way to do this
+//                print("Hi there")
+//                _ = TafAPI.shared.store
+//                    .receive(on: RunLoop.main)
+//                    .sink(receiveValue: { tafs in
+//                        print("OMG")
+//                        print(tafs)
+//                    })
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")
             } else {
