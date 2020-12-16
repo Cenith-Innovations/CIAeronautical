@@ -3,8 +3,9 @@
 
 ### About
 - This package will enable all things aeronautical for swift. The intention with this is a quick easy way to get anything you need to build aviation applications. Currently it has the following capabilities:
-* METAR
-* TAF
+* METAR: Aviation Selected Special Weather Report (it's french)
+* TAF: Terminal Area Forecast
+* AHAS: Avian Hazard Advisory System
 
 ## Implementation
 
