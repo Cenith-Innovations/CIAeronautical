@@ -6,6 +6,7 @@
 * METAR: Aviation Selected Special Weather Report (it's french)
 * TAF: Terminal Area Forecast
 * AHAS: Avian Hazard Advisory System
+* NOTAMs: NOtices To AirMen  
 
 ## Implementation
 
