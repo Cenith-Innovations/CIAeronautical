@@ -18,7 +18,7 @@ public class MetarAPI: ObservableObject {
     public static var shared = MetarAPI()
     
     /// New School way of getting the METAR
-    public var store = PassthroughSubject<Metar, Never>()
+    @Published public var store = Metar()
     
     private static let session: URLSession = { URLSession(configuration: .default) }()
     
@@ -31,7 +31,7 @@ public class MetarAPI: ObservableObject {
             if let XMLData = data {
                 let currentMetars = MetarParser(data: XMLData).metars
                 if currentMetars.count > 0 {
-                    MetarAPI.shared.store.send(currentMetars[0])
+                    MetarAPI.shared.store = currentMetars[0]
                 }
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")
