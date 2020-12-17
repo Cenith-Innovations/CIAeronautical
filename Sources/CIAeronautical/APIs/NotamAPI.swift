@@ -10,10 +10,8 @@ import Foundation
 import Combine
 
 @available(OSX 10.15, *)
-/// Classy way to get the NOTAMs... Thanks ATIS. I edited it so the architecture matched the other APIs.
 public class NotamAPI: ObservableObject {
     
-    /// New School way of getting the NOTAMs
     @Published public var store: NotamList = [:]
     
     /// Goes out and grabs the NOTAMs for the ICAOs listed.
@@ -30,7 +28,6 @@ public class NotamAPI: ObservableObject {
         let session = URLSession(configuration: .ephemeral)
         let task = session.dataTask(with: request) { (data, response, error) in
             guard let data = data, error == nil else {
-                //We can safely force-unwrap the error because we test for non-nil above
                 print("Data not found, error encountered: \(error!)")
                 return
             }
