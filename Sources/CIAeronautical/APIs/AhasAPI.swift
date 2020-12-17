@@ -13,32 +13,30 @@ import Combine
 @available(OSX 10.15, *)
 public class AhasAPI: ObservableObject {
     
-    /// A shared instance of the AhasAPI, used to link the @Published ahasStore so your user-interface will automatically update when this updates with a new AHAS BirdCondition.
-    public static var shared = AhasAPI()
+    public init() { }
     
-    /// New School way of getting the Ahas
     @Published public var store: [Ahas] = []
     
     /// Goes and fetches the current bird condition for an area. The areas are defined in AhasInputs.swift.
     /// - Parameter area: Area as defined in AhasInputs.swift
-    public static func getBirdConditionCurrentFor(area: String) {
-        AhasAPI.shared.getBirdCondition(area: area,
-                                        month: Date.getAhasDateComponents().month,
-                                        day: Date.getAhasDateComponents().day,
-                                        hourZ: Date.getAhasDateComponents().hourZ,
-                                        duration: nil)
+    public func getBirdConditionCurrentFor(area: String) {
+        self.getBirdCondition(area: area,
+                              month: Date.getAhasDateComponents().month,
+                              day: Date.getAhasDateComponents().day,
+                              hourZ: Date.getAhasDateComponents().hourZ,
+                              duration: nil)
     }
     
     
     /// Goes and fetches the current bird condition for an ICAO.
     /// - Parameter icao: Airfield ICAO
-    public static func getBirdConditionCurrentFor(icao: String) {
+    public func getBirdConditionCurrentFor(icao: String) {
         let area = AHASInputs.hiddenInputs[icao] ?? ""
-        AhasAPI.shared.getBirdCondition(area: area,
-                                        month: Date.getAhasDateComponents().month,
-                                        day: Date.getAhasDateComponents().day,
-                                        hourZ: Date.getAhasDateComponents().hourZ,
-                                        duration: nil)
+        self.getBirdCondition(area: area,
+                              month: Date.getAhasDateComponents().month,
+                              day: Date.getAhasDateComponents().day,
+                              hourZ: Date.getAhasDateComponents().hourZ,
+                              duration: nil)
     }
     
     
@@ -46,13 +44,13 @@ public class AhasAPI: ObservableObject {
     /// - Parameters:
     ///   - icao: Airfield ICAO
     ///   - numberOfHours: Hours into the future you want to get the bird condition
-    public static func getBirdConditionFutureFor(icao: String, numberOfHours: Int) {
+    public func getBirdConditionFutureFor(icao: String, numberOfHours: Int) {
         let area = AHASInputs.hiddenInputs[icao] ?? ""
-        AhasAPI.shared.getBirdCondition(area: area,
-                                        month: Date.getAhasDateComponents().month,
-                                        day: Date.getAhasDateComponents().day,
-                                        hourZ: Date.getAhasDateComponents().hourZ,
-                                        duration: numberOfHours)
+        self.getBirdCondition(area: area,
+                              month: Date.getAhasDateComponents().month,
+                              day: Date.getAhasDateComponents().day,
+                              hourZ: Date.getAhasDateComponents().hourZ,
+                              duration: numberOfHours)
     }
     
     
@@ -60,12 +58,12 @@ public class AhasAPI: ObservableObject {
     /// - Parameters:
     ///   - area: Area as defined in AhasInputs.swift
     ///   - numberOfHours: Hours into the future you want to get the bird condition.
-    public static func getBirdConditionFutureFor(area: String, numberOfHours: Int) {
-        AhasAPI.shared.getBirdCondition(area: area,
-                                        month: Date.getAhasDateComponents().month,
-                                        day: Date.getAhasDateComponents().day,
-                                        hourZ: Date.getAhasDateComponents().hourZ,
-                                        duration: numberOfHours)
+    public func getBirdConditionFutureFor(area: String, numberOfHours: Int) {
+        self.getBirdCondition(area: area,
+                              month: Date.getAhasDateComponents().month,
+                              day: Date.getAhasDateComponents().day,
+                              hourZ: Date.getAhasDateComponents().hourZ,
+                              duration: numberOfHours)
     }
     
     
@@ -73,12 +71,12 @@ public class AhasAPI: ObservableObject {
     /// - Parameters:
     ///   - ahasSearchable: Any of the myriad ways to search for an area covered by the AHAS website… The most complicated way to find info that no one gives a shit about anyway.
     ///   - numberOfHours: Hours into the future you want to get the bird condition.
-    public static func getBirdConditionCurrentFor(ahasSearchable: AhasSearchable, numberOfHours: Int) {
-        AhasAPI.shared.getBirdCondition(area: ahasSearchable.description,
-                                        month: Date.getAhasDateComponents().month,
-                                        day: Date.getAhasDateComponents().day,
-                                        hourZ: Date.getAhasDateComponents().hourZ,
-                                        duration: numberOfHours)
+    public func getBirdConditionCurrentFor(ahasSearchable: AhasSearchable, numberOfHours: Int) {
+        self.getBirdCondition(area: ahasSearchable.description,
+                              month: Date.getAhasDateComponents().month,
+                              day: Date.getAhasDateComponents().day,
+                              hourZ: Date.getAhasDateComponents().hourZ,
+                              duration: numberOfHours)
     }
     
     
@@ -92,7 +90,7 @@ public class AhasAPI: ObservableObject {
             if let XMLData = data {
                 let birdCondition = AhasParser(data: XMLData).ahas
                 DispatchQueue.main.async {
-                    AhasAPI.shared.store = birdCondition
+                    self.store = birdCondition
                 }
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")

@@ -14,10 +14,8 @@ import Combine
 /// Classy way to download the TAF
 public class TafAPI: ObservableObject {
     
-    /// A shared instance of the TafAPI, used to link the @Published tafStore so your user-interface will automatically update when this updates with a new TAF.
-    static public var shared = TafAPI()
+    public init() { }
     
-    /// New School way of getting the TAF
     @Published public var store: [Taf] = []
     
     private let session: URLSession = { URLSession(configuration: .default) }()
@@ -29,7 +27,7 @@ public class TafAPI: ObservableObject {
         let request = URLRequest(url: url)
         let task = session.dataTask(with: request) { (data, response, error) -> Void in
             if let XMLData = data {
-                TafAPI.shared.store = TafParser(data: XMLData).tafs
+                self.store = TafParser(data: XMLData).tafs
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")
             } else {

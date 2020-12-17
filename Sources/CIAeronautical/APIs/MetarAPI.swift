@@ -14,24 +14,22 @@ import Combine
 @available(OSX 10.15, *)
 public class MetarAPI: ObservableObject {
     
-    /// A shared instance of the MetarAPI, used to link the @Published metarStore so your user-interface will automatically update when this updates with a new METAR.
-    public static var shared = MetarAPI()
+    public init() { }
     
-    /// New School way of getting the METAR
     @Published public var store = Metar()
     
-    private static let session: URLSession = { URLSession(configuration: .default) }()
+    private let session: URLSession = { URLSession(configuration: .default) }()
     
     /// Downloads the current METAR for the Airfield
     /// - Parameter icao: ICAO
-    public static func getMetarFor(icao: String) {
+    public func getMetarFor(icao: String) {
         let url = AddsWeatherAPI().weatherURL(type: .metar, icao: "\(icao)")
         let request = URLRequest(url: url)
         let task = self.session.dataTask(with: request) { (data, response, error) -> Void in
             if let XMLData = data {
                 let currentMetars = MetarParser(data: XMLData).metars
                 if currentMetars.count > 0 {
-                    MetarAPI.shared.store = currentMetars[0]
+                    self.store = currentMetars[0]
                 }
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")
