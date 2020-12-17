@@ -29,7 +29,9 @@ public class MetarAPI: ObservableObject {
             if let XMLData = data {
                 let currentMetars = MetarParser(data: XMLData).metars
                 if currentMetars.count > 0 {
-                    self.store = currentMetars[0]
+                    DispatchQueue.main.async {
+                        self.store = currentMetars[0]
+                    }
                 }
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")

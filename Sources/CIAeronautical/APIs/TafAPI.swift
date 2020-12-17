@@ -27,7 +27,9 @@ public class TafAPI: ObservableObject {
         let request = URLRequest(url: url)
         let task = session.dataTask(with: request) { (data, response, error) -> Void in
             if let XMLData = data {
-                self.store = TafParser(data: XMLData).tafs
+                DispatchQueue.main.async {
+                    self.store = TafParser(data: XMLData).tafs
+                }
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")
             } else {
