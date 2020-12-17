@@ -17,7 +17,7 @@ public class AhasAPI: ObservableObject {
     public static var shared = AhasAPI()
     
     /// New School way of getting the Ahas
-    public var store = PassthroughSubject<[Ahas], Never>()
+    @Published public var store: [Ahas] = []
     
     /// Goes and fetches the current bird condition for an area. The areas are defined in AhasInputs.swift.
     /// - Parameter area: Area as defined in AhasInputs.swift
@@ -92,7 +92,7 @@ public class AhasAPI: ObservableObject {
             if let XMLData = data {
                 let birdCondition = AhasParser(data: XMLData).ahas
                 DispatchQueue.main.async {
-                    AhasAPI.shared.store.send(birdCondition)
+                    AhasAPI.shared.store = birdCondition
                 }
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")
