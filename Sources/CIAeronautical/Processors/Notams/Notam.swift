@@ -18,12 +18,12 @@ public struct Notam: Loopable {
     public var rvrOutOfService: String?
     
     init(notam: String) {
-//        let times = NotamHandler.getRXStartandEndTimes(notam: notam)
-//        creationDate = NotamHandler.getCreationDate(notam: notam)
-//        startDate = times.start
-//        endDate = times.end
-//        closedRunways = NotamHandler.getRXClosedRwysFrom(notam: notam)
-//        rvrOutOfService = NotamHandler.getRVRoutOfServiceForRWYs(notam: notam)
+        let times = NotamHandler.getRXStartandEndTimes(notam: notam)
+        creationDate = NotamHandler.getCreationDate(notam: notam)
+        startDate = times.start
+        endDate = times.end
+        closedRunways = NotamHandler.getRXClosedRwysFrom(notam: notam)
+        rvrOutOfService = NotamHandler.getRVRoutOfServiceForRWYs(notam: notam)
     }
     // TODO: Tie the properties below
 //    var stateCode: String    //ISO 3-Letter code of the State
