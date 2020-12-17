@@ -2,7 +2,7 @@
 [![SPM supported](https://img.shields.io/badge/SPM-supported-brightgreen.svg?style=flat)](https://swift.org/package-manager)
 
 ## About
-### This package will enable all things aeronautical for swift. The intention with this is a quick easy way to get anything you need to build aviation applications. Currently it has the following capabilities:
+***This package will enable all things aeronautical for swift. The intention with this is a quick easy way to get anything you need to build aviation applications. Currently it has the following capabilities:***
 * METAR: Aviation Selected Special Weather Report (it's french)
 * TAF: Terminal Area Forecast
 * AHAS: Avian Hazard Advisory System
