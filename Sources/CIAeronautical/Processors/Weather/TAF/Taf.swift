@@ -9,7 +9,8 @@
 import Foundation
 
 /// TAF: Terminal Area Forcast
-public struct Taf: Loopable {
+public struct Taf: Identifiable, Loopable {
+    public var id = UUID()
     public var rawText: String?
     public var stationId: String?
     public var issueTime: String?
