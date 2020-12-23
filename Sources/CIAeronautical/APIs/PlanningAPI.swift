@@ -101,9 +101,6 @@ public class PlanningAPI: ObservableObject {
     /// Retrieves the notams for the corresponding array of icao.
     /// - Parameter icao: an array of desired icao.
     public func getNotamsFor(icao: [String]) {
-        print("************* ICAO ******************")
-        print(icao)
-        print("************************************")
         let stations = icao.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         let url = URL(string: "https://www.notams.faa.gov/dinsQueryWeb/queryRetrievalMapAction.do")!
         var request = URLRequest(url: url)
