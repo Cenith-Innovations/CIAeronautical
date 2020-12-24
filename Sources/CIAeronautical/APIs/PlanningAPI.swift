@@ -43,6 +43,8 @@ public class PlanningAPI: ObservableObject {
     
     private let session: URLSession = { URLSession(configuration: .default) }()
     
+    /// Pulls all of the planning info for a given ICAO. NOTE: the AHAS is pulled for the current time in this function.
+    /// - Parameter icao: ICAO identifier for the airfield.
     public func getAllInfoFor(_ icao: String) {
         getMetarFor(icao)
         getTafFor(icao)
