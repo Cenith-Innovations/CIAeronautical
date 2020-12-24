@@ -118,9 +118,6 @@ public class PlanningAPI: ObservableObject {
                 return
             }
             let responseString = String(decoding: data, as: UTF8.self)
-            print("************* REPSONSE ******************")
-            print(responseString)
-            print("************************************")
             let currentNotams = NotamParser(htmlData: responseString).notams
             DispatchQueue.main.async {
                 //Object Oriented
