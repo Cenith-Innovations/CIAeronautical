@@ -15,24 +15,6 @@ public class PlanningAPI: ObservableObject {
     
     public init() {}
     
-    /// Publisher that contains the METAR for the input ICAO.
-    @Published public var metar: Metar?
-    
-    /// Publisher that contains the TAFs for the input ICAO.
-    @Published public var tafs: [Taf] = []
-    
-    /// Publisher that contains the BirdConditions for the input area.
-    @Published public var birdConditions: [Ahas] = []
-    
-    /// Publisher that contains NOTAMs
-    /// ### Example use in your View
-    ///```
-    ///ForEach(planningAPI.notams[icao] ?? [], id: \.self) { notam in
-    ///   Text(notam)
-    ///}
-    ///```
-    @Published public var notams: NotamList = [:]
-    
     /// Publisher that contains NOTAMs
     /// 👉 - This one is still a work in progress. I've decided to go full Object Oriented Programming with this one. Im casting each notam String as a NOTAM object. I need to write the parsers to pull out the different fields.
     /// ### Example use in your View
@@ -41,23 +23,37 @@ public class PlanningAPI: ObservableObject {
     ///   Text(notam.startDate?.description ?? "No Date")
     ///}
     ///```
-    @Published public var notams_: [String: [Notam]] = [:]
+    @Published public var notams: [String: [Notam]] = [:]
     
+    /// Publisher that contains the METAR for the input ICAO.
+    @Published public var metar: Metar?
+    
+    /// Publisher that contains the TAFs for the input ICAO.
+    @Published public var tafs: [Taf] = []
+    
+    /// Publisher that contains the BirdConditions for the input area.
+    @Published public var ahas: [Ahas] = []
     
     /// Clears all of the publishers.
     public func clearAll() {
         notams = [:]
-        notams_ = [:]
         metar = nil
         tafs = []
     }
     
     private let session: URLSession = { URLSession(configuration: .default) }()
     
+    public func getAllInfoFor(_ icao: String) {
+        getMetarFor(icao)
+        getTafFor(icao)
+        getNotamsFor([icao])
+        getBirdConditionCurrentFor(icao)
+    }
+    
     // MARK: - 🔅 METAR
     /// Downloads the current METAR for the Airfield
     /// - Parameter icao: ICAO
-    public func getMetarFor(icao: String) {
+    public func getMetarFor(_ icao: String) {
         let url = AddsWeatherAPI().weatherURL(type: .metar, icao: "\(icao)")
         let request = URLRequest(url: url)
         let task = self.session.dataTask(with: request) { (data, response, error) -> Void in
@@ -80,7 +76,7 @@ public class PlanningAPI: ObservableObject {
     // MARK: - 🔅 TAFs
     /// Gets the current TAFs for the Airfield
     /// - Parameter icao: ICAO
-    public func getTafFor(icao: String) {
+    public func getTafFor(_ icao: String) {
         let url = AddsWeatherAPI().weatherURL(type: .taf, icao: "\(icao)")
         let request = URLRequest(url: url)
         let task = session.dataTask(with: request) { (data, response, error) -> Void in
@@ -99,9 +95,9 @@ public class PlanningAPI: ObservableObject {
     
     // MARK: - 🔅 NOTAMs
     /// Retrieves the notams for the corresponding array of icao.
-    /// - Parameter icao: an array of desired icao.
-    public func getNotamsFor(icao: [String]) {
-        let stations = icao.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    /// - Parameter icaos: an array of desired icao.
+    public func getNotamsFor(_ icaos: [String]) {
+        let stations = icaos.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         let url = URL(string: "https://www.notams.faa.gov/dinsQueryWeb/queryRetrievalMapAction.do")!
         var request = URLRequest(url: url)
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -125,7 +121,6 @@ public class PlanningAPI: ObservableObject {
             print("************************************")
             let currentNotams = NotamParser(htmlData: responseString).notams
             DispatchQueue.main.async {
-                self.notams = currentNotams
                 //Object Oriented
                 var tempNotams:[String: [Notam]] = [:]
                 for (icao, notamList) in currentNotams {
@@ -135,7 +130,7 @@ public class PlanningAPI: ObservableObject {
                     }
                     tempNotams[icao] = notams
                 }
-                self.notams_ = tempNotams
+                self.notams = tempNotams
             }
         }
         task.resume()
@@ -156,7 +151,7 @@ public class PlanningAPI: ObservableObject {
     
     /// Goes and fetches the current bird condition for an ICAO.
     /// - Parameter icao: Airfield ICAO
-    public func getBirdConditionCurrentFor(icao: String) {
+    public func getBirdConditionCurrentFor(_ icao: String) {
         let area = AHASInputs.hiddenInputs[icao] ?? ""
         self.getBirdCondition(area: area,
                               month: Date.getAhasDateComponents().month,
@@ -213,7 +208,7 @@ public class PlanningAPI: ObservableObject {
             if let XMLData = data {
                 let birdCondition = AhasParser(data: XMLData).ahas
                 DispatchQueue.main.async {
-                    self.birdConditions = birdCondition
+                    self.ahas = birdCondition
                 }
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")
