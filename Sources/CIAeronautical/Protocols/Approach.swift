@@ -62,9 +62,9 @@ public struct NotamFilter: ApproachFilter {
     init(notams: [Notam], approach: Approach, category: ApproachCategory, type: ApproachType) {
         func usableApproach(notam: [Notam]) -> Bool {
             
-            for notam in notams {
-                if notam.closedRunways
-            }
+//            for notam in notams {
+//                if notam.closedRunways
+//            }
             
             return true
         }
