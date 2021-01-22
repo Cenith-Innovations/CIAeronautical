@@ -44,10 +44,6 @@ public enum TermAppType: String, CaseIterable {
 public enum ApproachCategory: CaseIterable {
     case A, B, C, D, E
 }
-//
-//public enum ApproachCategory {
-//    case a, b, c, d, e
-//}
 
 public enum ApproachType {
     case precision, nonPrecision
