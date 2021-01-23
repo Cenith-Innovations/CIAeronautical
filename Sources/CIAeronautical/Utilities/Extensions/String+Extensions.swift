@@ -1,9 +1,9 @@
-// ********************** File *********************************
+// ********************** String+Extensions *********************************
 // * Copyright © Cenith Innovations - All Rights Reserved
 // * Created on 12/17/20, for 
 // * Matthew Elmore <matt@cenithinnovations.com>
 // * Unauthorized copying of this file is strictly prohibited
-// ********************** File *********************************
+// ********************** String+Extensions *********************************
 
 
 import Foundation

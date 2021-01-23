@@ -8,7 +8,7 @@
 
 import Foundation
 
-public enum Range: String, AhasSearchable {
+public enum MilitaryRange: String, AhasSearchable {
     public var description: String { return self.rawValue}
     case ABERDEEN_MD = "ABERDEEN, MD"
     case ADMIRALTY_INLET_WA = "ADMIRALTY INLET, WA"
