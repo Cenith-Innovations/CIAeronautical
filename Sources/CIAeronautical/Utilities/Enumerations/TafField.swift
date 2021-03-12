@@ -46,4 +46,13 @@ public enum TafField: String, CaseIterable {
     case surfcaeTempC = "sfc_temp_c"
     case maxTempC = "max_temp_c"
     case minTempC = "min_temp_c"
+    case skyCover = "sky_cover"
+    case cloudBaseFtAGL = "cloud_base_ft_agl"
+    case icingIntensity = "icing_intensity"
+    case icingMinAltFtAGL = "icing_min_alt_ft_agl"
+    case icingMaxAltFtAGL = "icing_max_alt_ft_agl"
 }
+
+
+
+

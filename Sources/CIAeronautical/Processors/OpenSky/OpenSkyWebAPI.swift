@@ -11,6 +11,7 @@ import Combine
 import CoreLocation
 
 /// The interface used to search URL for OpenSky. Full description see - [OpenSky REST API](https://opensky-network.org/apidoc/rest.html)
+@available(tvOS 13.0, *)
 public class OpenSkyWebAPI: ObservableObject {
     
     /// The base url to add query components.
