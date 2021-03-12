@@ -38,12 +38,25 @@ public struct Taf: Identifiable, Loopable {
     public var vertVisFt: String?
     public var weatherString: String?
     public var notDecoded: String?
-    public var skyCondition: String?
+    public var skyCondition: [SkyCondition?]?
     public var turbulenceCondition: String?
-    public var icingCondition: String?
+    public var icingCondition: [IcingCondition?]?
     public var temperature: String?
     public var validTime: String?
     public var surfaceTempC: String?
     public var maxTempC: String?
     public var minTempC: String?
+}
+
+
+public struct SkyCondition {
+    public var skyCover: String?
+    public var cloudBaseFtAgl: String?
+}
+
+public struct IcingCondition {
+    
+    public var icingIntensity: String?
+    public var icingMinAltFtAgl: String?
+    public var icingMaxAltFtAgl: String?
 }

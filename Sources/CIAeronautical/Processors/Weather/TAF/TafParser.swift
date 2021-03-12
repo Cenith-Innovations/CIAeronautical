@@ -28,12 +28,26 @@ public class TafParser: NSObject, XMLParserDelegate {
         results = []
     }
     
+    var skyConditions: [SkyCondition?] = []
+    var icingConditions: [IcingCondition?] = []
     public func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
         if elementName == taf {
             currentTaf = [:]
+            skyConditions = []
+            icingConditions = []
         } else if tafKeys.contains(elementName) {
+            if elementName == tafField(.skyCondition) {
+                skyConditions.append(SkyCondition(skyCover: attributeDict[tafField(.skyCover)],
+                                                  cloudBaseFtAgl: attributeDict[tafField(.cloudBaseFtAGL)]))
+            } else if elementName == tafField(.icingCondition) {
+                icingConditions.append(IcingCondition(icingIntensity: attributeDict[tafField(.icingIntensity)],
+                                                      icingMinAltFtAgl: attributeDict[tafField(.icingMinAltFtAGL)],
+                                                      icingMaxAltFtAgl: attributeDict[tafField(.icingMaxAltFtAGL)]))
+                print(icingConditions)
+            }
             currentValue = ""
-        }}
+        }
+    }
     
     public func parser(_ parser: XMLParser, foundCharacters string: String) {
         currentValue? += string
@@ -45,7 +59,11 @@ public class TafParser: NSObject, XMLParserDelegate {
             results!.append(currentTaf!)
             currentTaf = nil
         } else if tafKeys.contains(elementName) {
-            currentTaf![elementName] = currentValue
+            if elementName == tafField(.skyCondition) {
+            } else {
+                currentTaf![elementName] = currentValue
+            }
+            
             currentValue = nil
         }}
     
@@ -79,9 +97,9 @@ public class TafParser: NSObject, XMLParserDelegate {
                          vertVisFt: taf[tafField(.vertVisFt)],
                          weatherString: taf[tafField(.weatherString)],
                          notDecoded: taf[tafField(.notDecoded)],
-                         skyCondition: taf[tafField(.skyCondition)],
+                         skyCondition: skyConditions,
                          turbulenceCondition: taf[tafField(.turbulenceCondition)],
-                         icingCondition: taf[tafField(.icingCondition)],
+                         icingCondition: icingConditions,
                          temperature: taf[tafField(.temperature)],
                          validTime: taf[tafField(.validTime)],
                          surfaceTempC: taf[tafField(.surfcaeTempC)],
@@ -101,3 +119,5 @@ public class TafParser: NSObject, XMLParserDelegate {
         results = nil
     }
 }
+
+

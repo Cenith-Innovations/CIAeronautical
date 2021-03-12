@@ -9,6 +9,7 @@
 import SwiftUI
 import Combine
 
+@available(tvOS 13.0, *)
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
 public class PlanningAPI: ObservableObject {

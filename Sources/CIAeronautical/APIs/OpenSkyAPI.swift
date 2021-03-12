@@ -11,6 +11,7 @@ import Combine
 import CoreLocation
 
 /// Interface to go get all the pretty airplanes. Full description see - [OpenSky REST API](https://opensky-network.org/apidoc/rest.html)
+@available(tvOS 13.0, *)
 public class OpenSkyAPI: ObservableObject {
     
     /// A shared instance of the OpenSkyAPI, used to link the @Published store so your user-interface will automatically update when this updates with new ADS-B info.
