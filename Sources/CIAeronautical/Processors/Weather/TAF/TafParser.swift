@@ -43,7 +43,6 @@ public class TafParser: NSObject, XMLParserDelegate {
                 icingConditions.append(IcingCondition(icingIntensity: attributeDict[tafField(.icingIntensity)],
                                                       icingMinAltFtAgl: attributeDict[tafField(.icingMinAltFtAGL)],
                                                       icingMaxAltFtAgl: attributeDict[tafField(.icingMaxAltFtAGL)]))
-                print(icingConditions)
             }
             currentValue = ""
         }

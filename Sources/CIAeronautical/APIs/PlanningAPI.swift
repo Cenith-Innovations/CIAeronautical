@@ -35,7 +35,7 @@ public class PlanningAPI: ObservableObject {
     @Published public var metar: Metar?
 
     /// Temp Holder for metars to get rid of duplicates. The intended public Publisher is the Array of Metars
-    @Published private var metarSet: Set<Metar> = []
+//    @Published private var metarSet: Set<Metar> = []
     
     /// Publisher that holds Metars corresponding to AirfieldIcaos
     @Published public var metars: [Metar] = []

@@ -27,6 +27,8 @@ public enum MetarField: String, CaseIterable {
     case qualityControlFlags = "quality_control_flags"
     case wxString = "wx_string"
     case skyCondition = "sky_condition"
+    case skyCover = "sky_cover"
+    case cloudBaseFtAGL = "cloud_base_ft_agl"
     case flightCategory = "flight_category"
     case threeHrPressureTendencyMb = "three_hr_pressure_tendency_mb"
     case maxTempPastSixHoursC = "maxT_c"

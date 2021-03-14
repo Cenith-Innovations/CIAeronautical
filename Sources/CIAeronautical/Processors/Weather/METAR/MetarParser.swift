@@ -19,6 +19,7 @@ public class MetarParser: NSObject, XMLParserDelegate {
     
     convenience init(data: Data) {
         self.init()
+        let str = String(data: data, encoding: .utf8)
         let parser = XMLParser(data: data)
         parser.delegate = self
         let _ = parser.parse()
@@ -31,7 +32,12 @@ public class MetarParser: NSObject, XMLParserDelegate {
     public func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
         if elementName == metar {
             currentMetar = [:]
+            skyConditions = []
         } else if metarKeys.contains(elementName) {
+            if elementName == metarField(.skyCondition) {
+                skyConditions.append(SkyCondition(skyCover: attributeDict[metarField(.skyCover)],
+                                                  cloudBaseFtAgl: attributeDict[metarField(.cloudBaseFtAGL)]))
+            }
             currentValue = ""
     }}
     
@@ -39,6 +45,7 @@ public class MetarParser: NSObject, XMLParserDelegate {
         currentValue? += string
     }
     
+    var skyConditions: [SkyCondition?] = []
     public func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         if elementName == metar {
             results!.append(currentMetar!)
@@ -66,7 +73,7 @@ public class MetarParser: NSObject, XMLParserDelegate {
                                seaLevelPressureMb: metar[MetarField.seaLevelPressureMb.rawValue],
                                qualityControlFlags: metar[MetarField.qualityControlFlags.rawValue],
                                wxString: metar[MetarField.wxString.rawValue],
-                               skyCondition: metar[MetarField.skyCondition.rawValue],
+                               skyCondition: skyConditions,
                                flightCategory: metar[MetarField.flightCategory.rawValue],
                                threeHrPressureTendencyMb: metar[MetarField.threeHrPressureTendencyMb.rawValue],
                                maxTempPastSixHoursC: metar[MetarField.maxTempPastSixHoursC.rawValue],
@@ -81,8 +88,13 @@ public class MetarParser: NSObject, XMLParserDelegate {
                                vertVisFt: metar[MetarField.vertVisFt.rawValue],
                                metarType: metar[MetarField.metarType.rawValue],
                                elevationM: metar[MetarField.elevationM.rawValue])
+                print(wx.observationTime)
                 metars.append(wx)
     }}}
+    
+    fileprivate func metarField(_ mf: MetarField) -> String {
+        return mf.rawValue
+    }
     
     public func parser(_ parser: XMLParser, parseErrorOccurred parseError: Error) {
         print(parseError)
