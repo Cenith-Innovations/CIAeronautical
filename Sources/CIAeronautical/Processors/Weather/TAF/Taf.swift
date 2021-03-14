@@ -49,7 +49,7 @@ public struct Taf: Identifiable, Loopable {
 }
 
 
-public struct SkyCondition {
+public struct SkyCondition: Equatable {
     public var skyCover: String?
     public var cloudBaseFtAgl: String?
 }

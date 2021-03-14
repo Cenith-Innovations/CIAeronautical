@@ -9,7 +9,7 @@
 import Foundation
 
 /// METAR... Meteorological conditions
-public struct Metar: Identifiable ,Loopable {
+public struct Metar: Hashable ,Loopable {
 //
 //
 //    public static func == (lhs: Metar, rhs: Metar) -> Bool {
