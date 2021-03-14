@@ -9,7 +9,44 @@
 import Foundation
 
 /// METAR... Meteorological conditions
-public struct Metar: Loopable {
+public struct Metar: Loopable, Hashable {
+    public init(rawText: String? = nil, stationId: String? = nil, observationTime: String? = nil, latitude: String? = nil, longitude: String? = nil, tempC: String? = nil, dewPointC: String? = nil, windDirDegrees: String? = nil, windSpeedKts: String? = nil, windGustKts: String? = nil, visibilityStatuteMiles: String? = nil, altimeterInHg: String? = nil, seaLevelPressureMb: String? = nil, qualityControlFlags: String? = nil, wxString: String? = nil, skyCondition: String? = nil, flightCategory: String? = nil, threeHrPressureTendencyMb: String? = nil, maxTempPastSixHoursC: String? = nil, minTempPastSixHoursC: String? = nil, maxTemp24HrC: String? = nil, minTemp24HrC: String? = nil, precipIn: String? = nil, precipLast3HoursIn: String? = nil, precipLast6HoursIn: String? = nil, precipLast24HoursIn: String? = nil, snowIn: String? = nil, vertVisFt: String? = nil, metarType: String? = nil, elevationM: String? = nil) {
+        self.rawText = rawText
+        self.stationId = stationId
+        self.observationTime = observationTime
+        self.latitude = latitude
+        self.longitude = longitude
+        self.tempC = tempC
+        self.dewPointC = dewPointC
+        self.windDirDegrees = windDirDegrees
+        self.windSpeedKts = windSpeedKts
+        self.windGustKts = windGustKts
+        self.visibilityStatuteMiles = visibilityStatuteMiles
+        self.altimeterInHg = altimeterInHg
+        self.seaLevelPressureMb = seaLevelPressureMb
+        self.qualityControlFlags = qualityControlFlags
+        self.wxString = wxString
+        self.skyCondition = skyCondition
+        self.flightCategory = flightCategory
+        self.threeHrPressureTendencyMb = threeHrPressureTendencyMb
+        self.maxTempPastSixHoursC = maxTempPastSixHoursC
+        self.minTempPastSixHoursC = minTempPastSixHoursC
+        self.maxTemp24HrC = maxTemp24HrC
+        self.minTemp24HrC = minTemp24HrC
+        self.precipIn = precipIn
+        self.precipLast3HoursIn = precipLast3HoursIn
+        self.precipLast6HoursIn = precipLast6HoursIn
+        self.precipLast24HoursIn = precipLast24HoursIn
+        self.snowIn = snowIn
+        self.vertVisFt = vertVisFt
+        self.metarType = metarType
+        self.elevationM = elevationM
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(stationId)
+    }
+    
     public var rawText: String?
     public var stationId: String?
     public var observationTime: String?

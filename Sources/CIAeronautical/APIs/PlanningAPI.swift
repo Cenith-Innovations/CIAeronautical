@@ -14,7 +14,11 @@ import Combine
 @available(OSX 10.15, *)
 public class PlanningAPI: ObservableObject {
     
-    public init() {}
+    public init(airfieldIcaos: [String] = []) {
+        self.airfieldIcaos = airfieldIcaos
+    }
+    /// Set this when instantiating the Planning API if you want to pull info accross multiple Processors for the ICAOs in here.
+    @Published public var airfieldIcaos: [String] = []
     
     /// Publisher that contains NOTAMs
     /// 👉 - This one is still a work in progress. I've decided to go full Object Oriented Programming with this one. Im casting each notam String as a NOTAM object. I need to write the parsers to pull out the different fields.
@@ -26,12 +30,21 @@ public class PlanningAPI: ObservableObject {
     ///```
     @Published public var notams: [String: [Notam]] = [:]
     
+    // MARK: - 🔅 Publishers: METARs
     /// Publisher that contains the METAR for the input ICAO.
     @Published public var metar: Metar?
+
+    /// Temp Holder for metars to get rid of duplicates. The intended public Publisher is the Array of Metars
+    @Published private var metarSet: Set<Metar> = []
     
+    /// Publisher that holds Metars corresponding to AirfieldIcaos
+    @Published public var metars: [Metar] = []
+    
+    // MARK: - 🔅 Publishers: TAF
     /// Publisher that contains the TAFs for the input ICAO.
     @Published public var tafs: [Taf] = []
     
+    // MARK: - 🔅 Publishers: AHAS
     /// Publisher that contains the BirdConditions for the input area.
     @Published public var ahas: [Ahas] = []
     
@@ -74,6 +87,39 @@ public class PlanningAPI: ObservableObject {
             }
         }
         task.resume()
+    }
+    
+    public func getMetarsForAirfields() {
+        for icao in airfieldIcaos {
+            let url = AddsWeatherAPI().weatherURL(type: .metar, icao: "\(icao)")
+            let request = URLRequest(url: url)
+            let task = self.session.dataTask(with: request) { (data, response, error) -> Void in
+                if let XMLData = data {
+                    let currentMetars = MetarParser(data: XMLData).metars
+                    if currentMetars.count > 0 {
+                        DispatchQueue.main.async {
+                            let newMetar = currentMetars[0]
+                            
+                            if self.metars.count == self.airfieldIcaos.count {
+                                for i in 0..<self.metars.count {
+                                    if self.metars[i].stationId == newMetar.stationId {
+                                        self.metars.remove(at: i)
+                                        self.metars.insert(newMetar, at: i)
+                                    }
+                                }
+                            } else {
+                                self.metars.append(newMetar)
+                            }
+                        }
+                    }
+                } else if let requestError = error {
+                    print("Error fetching metar: \(requestError)")
+                } else {
+                    print("Unexpected error with request")
+                }
+            }
+            task.resume()
+        }
     }
     
     // MARK: - 🔅 TAFs
