@@ -40,21 +40,19 @@ public struct Wind {
         }
     }
     
-    public static func calcWinds(highHdg: Double?, lowghHdg: Double?, windSpeed: String?, windDirection: String?) -> CalcWinds {
+    public static func calcWinds(highHdg: Double?, lowghHdg: Double?, windSpeed: Double?, windDirection: Double?) -> CalcWinds {
         let heRwyHeading = Heading(Int(highHdg!))
         let leRwyHeading = Heading(Int(lowghHdg!))
         let noWindValue = 99999.0
         
         let unknowConditions = (hehw: noWindValue, hexw: noWindValue, lehw: noWindValue, lexw: noWindValue)
         
-        
-        guard let windDirectionStr = windDirection else { return unknowConditions }
-        guard let windDirectionInt = Int(windDirectionStr) else { return unknowConditions }
+        guard let windDirection = windDirection else { return unknowConditions }
+        let windDirectionInt = Int(windDirection)
         let windHeading = Heading(windDirectionInt)
-        guard let windSpeedStr = windSpeed else { return unknowConditions }
-        guard let windSpeedDouble = Double(windSpeedStr) else { return unknowConditions }
-        let heWind = Wind(windHeading: windHeading, windSpeed: windSpeedDouble, runwayHeading: heRwyHeading)
-        let leWind = Wind(windHeading: windHeading, windSpeed: windSpeedDouble, runwayHeading: leRwyHeading)
+        guard let windSpeed = windSpeed else { return unknowConditions }
+        let heWind = Wind(windHeading: windHeading, windSpeed: windSpeed, runwayHeading: heRwyHeading)
+        let leWind = Wind(windHeading: windHeading, windSpeed: windSpeed, runwayHeading: leRwyHeading)
         
         
         let hehw = heWind.headWind

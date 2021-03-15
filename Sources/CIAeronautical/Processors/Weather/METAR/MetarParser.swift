@@ -7,6 +7,7 @@
 
 
 import Foundation
+import CIFoundation
 
 /// Class to download and process METARs
 public class MetarParser: NSObject, XMLParserDelegate {
@@ -60,34 +61,34 @@ public class MetarParser: NSObject, XMLParserDelegate {
             for metar in resultMetars {
                 let wx = Metar(rawText: metar[MetarField.rawText.rawValue],
                                stationId: metar[MetarField.stationId.rawValue],
-                               observationTime: metar[MetarField.observationTime.rawValue],
-                               latitude: metar[MetarField.latitude.rawValue],
-                               longitude: metar[MetarField.longitude.rawValue],
-                               tempC: metar[MetarField.tempC.rawValue],
-                               dewPointC: metar[MetarField.dewPointC.rawValue],
-                               windDirDegrees: metar[MetarField.windDirDegrees.rawValue],
-                               windSpeedKts: metar[MetarField.windSpeedKts.rawValue],
-                               windGustKts: metar[MetarField.windGustKts.rawValue],
-                               visibilityStatuteMiles: metar[MetarField.visibilityStatuteMiles.rawValue],
-                               altimeterInHg: metar[MetarField.altimeterInHg.rawValue],
-                               seaLevelPressureMb: metar[MetarField.seaLevelPressureMb.rawValue],
+                               observationTime: metar[MetarField.observationTime.rawValue].metarTafStringToDate,
+                               latitude: metar[MetarField.latitude.rawValue].toDouble,
+                               longitude: metar[MetarField.longitude.rawValue].toDouble,
+                               tempC: metar[MetarField.tempC.rawValue].toDouble,
+                               dewPointC: metar[MetarField.dewPointC.rawValue].toDouble,
+                               windDirDegrees: metar[MetarField.windDirDegrees.rawValue].toDouble,
+                               windSpeedKts: metar[MetarField.windSpeedKts.rawValue].toDouble,
+                               windGustKts: metar[MetarField.windGustKts.rawValue].toDouble,
+                               visibilityStatuteMiles: metar[MetarField.visibilityStatuteMiles.rawValue].toDouble,
+                               altimeterInHg: metar[MetarField.altimeterInHg.rawValue].toDouble,
+                               seaLevelPressureMb: metar[MetarField.seaLevelPressureMb.rawValue].toDouble,
                                qualityControlFlags: metar[MetarField.qualityControlFlags.rawValue],
                                wxString: metar[MetarField.wxString.rawValue],
                                skyCondition: skyConditions,
                                flightCategory: metar[MetarField.flightCategory.rawValue],
                                threeHrPressureTendencyMb: metar[MetarField.threeHrPressureTendencyMb.rawValue],
-                               maxTempPastSixHoursC: metar[MetarField.maxTempPastSixHoursC.rawValue],
-                               minTempPastSixHoursC: metar[MetarField.minTempPastSixHoursC.rawValue],
-                               maxTemp24HrC: metar[MetarField.maxTemp24HrC.rawValue],
-                               minTemp24HrC: metar[MetarField.minTemp24HrC.rawValue],
-                               precipIn: metar[MetarField.precipIn.rawValue],
-                               precipLast3HoursIn: metar[MetarField.precipLast3HoursIn.rawValue],
-                               precipLast6HoursIn: metar[MetarField.precipLast6HoursIn.rawValue],
-                               precipLast24HoursIn: metar[MetarField.precipLast24HoursIn.rawValue],
-                               snowIn: metar[MetarField.snowIn.rawValue],
-                               vertVisFt: metar[MetarField.vertVisFt.rawValue],
+                               maxTempPastSixHoursC: metar[MetarField.maxTempPastSixHoursC.rawValue].toDouble,
+                               minTempPastSixHoursC: metar[MetarField.minTempPastSixHoursC.rawValue].toDouble,
+                               maxTemp24HrC: metar[MetarField.maxTemp24HrC.rawValue].toDouble,
+                               minTemp24HrC: metar[MetarField.minTemp24HrC.rawValue].toDouble,
+                               precipIn: metar[MetarField.precipIn.rawValue].toDouble,
+                               precipLast3HoursIn: metar[MetarField.precipLast3HoursIn.rawValue].toDouble,
+                               precipLast6HoursIn: metar[MetarField.precipLast6HoursIn.rawValue].toDouble,
+                               precipLast24HoursIn: metar[MetarField.precipLast24HoursIn.rawValue].toDouble,
+                               snowIn: metar[MetarField.snowIn.rawValue].toDouble,
+                               vertVisFt: metar[MetarField.vertVisFt.rawValue].toDouble,
                                metarType: metar[MetarField.metarType.rawValue],
-                               elevationM: metar[MetarField.elevationM.rawValue])
+                               elevationM: metar[MetarField.elevationM.rawValue].toDouble)
                 print(wx.observationTime)
                 metars.append(wx)
     }}}

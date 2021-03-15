@@ -11,7 +11,7 @@ let package = Package(
             name: "CIAeronautical",
             targets: ["CIAeronautical"]),
     ],
-    dependencies: [],
+    dependencies: [.package(url: "https://github.com/Cenith-Innovations/CIFoundation", .upToNextMajor(from: "1.0.0"))],
     targets: [
         .target(
             name: "CIAeronautical",
