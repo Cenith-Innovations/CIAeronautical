@@ -36,8 +36,8 @@ public class MetarParser: NSObject, XMLParserDelegate {
             skyConditions = []
         } else if metarKeys.contains(elementName) {
             if elementName == metarField(.skyCondition) {
-                skyConditions.append(SkyCondition(skyCover: attributeDict[metarField(.skyCover)],
-                                                  cloudBaseFtAgl: attributeDict[metarField(.cloudBaseFtAGL)]))
+                skyConditions.append(SkyCondition(skyCover: attributeDict[skyConditionField(.skyCover)],
+                                                  cloudBaseFtAgl: attributeDict[skyConditionField(.cloudBaseFtAGL)].toDouble))
             }
             currentValue = ""
     }}
@@ -89,12 +89,27 @@ public class MetarParser: NSObject, XMLParserDelegate {
                                vertVisFt: metar[MetarField.vertVisFt.rawValue].toDouble,
                                metarType: metar[MetarField.metarType.rawValue],
                                elevationM: metar[MetarField.elevationM.rawValue].toDouble)
-                print(wx.observationTime)
                 metars.append(wx)
     }}}
     
     fileprivate func metarField(_ mf: MetarField) -> String {
         return mf.rawValue
+    }
+    
+    fileprivate func forecastField(_ f: ForecastField) -> String {
+        return f.rawValue
+    }
+    
+    fileprivate func skyConditionField(_ f: SkyConditionField) -> String {
+        return f.rawValue
+    }
+    
+    fileprivate func turbulanceConditionField(_ f: TurbulanceConditionField) -> String {
+        return f.rawValue
+    }
+    
+    fileprivate func icingConditionField(_ f: IcingConditionField) -> String {
+        return f.rawValue
     }
     
     public func parser(_ parser: XMLParser, parseErrorOccurred parseError: Error) {
