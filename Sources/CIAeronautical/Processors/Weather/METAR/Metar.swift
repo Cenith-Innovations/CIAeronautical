@@ -10,6 +10,40 @@ import Foundation
 
 /// METAR... Meteorological conditions
 public struct Metar: Hashable ,Loopable {
+    public  init(id: UUID = UUID(), rawText: String? = nil, stationId: String? = nil, observationTime: Date? = nil, latitude: Double? = nil, longitude: Double? = nil, tempC: Double? = nil, dewPointC: Double? = nil, windDirDegrees: Double? = nil, windSpeedKts: Double? = nil, windGustKts: Double? = nil, visibilityStatuteMiles: Double? = nil, altimeterInHg: Double? = nil, seaLevelPressureMb: Double? = nil, qualityControlFlags: String? = nil, wxString: String? = nil, skyCondition: [SkyCondition?]? = nil, flightCategory: String? = nil, threeHrPressureTendencyMb: String? = nil, maxTempPastSixHoursC: Double? = nil, minTempPastSixHoursC: Double? = nil, maxTemp24HrC: Double? = nil, minTemp24HrC: Double? = nil, precipIn: Double? = nil, precipLast3HoursIn: Double? = nil, precipLast6HoursIn: Double? = nil, precipLast24HoursIn: Double? = nil, snowIn: Double? = nil, vertVisFt: Double? = nil, metarType: String? = nil, elevationM: Double? = nil) {
+        self.id = id
+        self.rawText = rawText
+        self.stationId = stationId
+        self.observationTime = observationTime
+        self.latitude = latitude
+        self.longitude = longitude
+        self.tempC = tempC
+        self.dewPointC = dewPointC
+        self.windDirDegrees = windDirDegrees
+        self.windSpeedKts = windSpeedKts
+        self.windGustKts = windGustKts
+        self.visibilityStatuteMiles = visibilityStatuteMiles
+        self.altimeterInHg = altimeterInHg
+        self.seaLevelPressureMb = seaLevelPressureMb
+        self.qualityControlFlags = qualityControlFlags
+        self.wxString = wxString
+        self.skyCondition = skyCondition
+        self.flightCategory = flightCategory
+        self.threeHrPressureTendencyMb = threeHrPressureTendencyMb
+        self.maxTempPastSixHoursC = maxTempPastSixHoursC
+        self.minTempPastSixHoursC = minTempPastSixHoursC
+        self.maxTemp24HrC = maxTemp24HrC
+        self.minTemp24HrC = minTemp24HrC
+        self.precipIn = precipIn
+        self.precipLast3HoursIn = precipLast3HoursIn
+        self.precipLast6HoursIn = precipLast6HoursIn
+        self.precipLast24HoursIn = precipLast24HoursIn
+        self.snowIn = snowIn
+        self.vertVisFt = vertVisFt
+        self.metarType = metarType
+        self.elevationM = elevationM
+    }
+    
     
     public static var DummySkyConditions: [SkyCondition] = [
         SkyCondition(skyCover: "OVC", cloudBaseFtAgl: 500),
