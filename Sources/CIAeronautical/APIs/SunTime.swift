@@ -229,7 +229,14 @@ public class SunTime: ObservableObject {
         let numberOfSeconds = decTime * 86400
         let hour = Int(floor(numberOfSeconds / 3600))
         let minute = Int(floor((numberOfSeconds - (Double(hour) * 3600)) / 60))
-        let timeString = "\(hour):\(minute)"
+        var minuteStr: String {
+            if minute < 10 {
+                return "0\(minute)"
+            } else {
+                return "\(minute)"
+            }
+        }
+        let timeString = "\(hour):\(minuteStr)"
         return timeString
     }
     
