@@ -248,7 +248,6 @@ public class PlanningAPI: ObservableObject {
     
     private func getBirdCondition(area: String, month: String, day: String, hourZ: String, duration: Int?) {
         let url = AhasWebAPI.AhasURL(area: area, month: month, day: day, hour: hourZ, parameters: nil)
-        print(url)
         let request = URLRequest(url: url)
         let task = self.session.dataTask(with: request) { (data, response, error) -> Void in
             if let XMLData = data {
