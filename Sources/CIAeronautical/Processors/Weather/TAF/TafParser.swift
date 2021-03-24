@@ -89,7 +89,7 @@ public class TafParser: NSObject, XMLParserDelegate {
             currentForecast![elementName] = currentValue
             currentValue = nil
         default:
-            print("default")
+            break
         }
     }
     
