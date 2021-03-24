@@ -58,7 +58,6 @@ public class TafParser: NSObject, XMLParserDelegate {
             skyConditions.append(SkyCondition(skyCover: attributeDict[skyConditionField(.skyCover)],
                                               cloudBaseFtAgl: attributeDict[skyConditionField(.cloudBaseFtAGL)].toDouble,
                                               cloudType: attributeDict[skyConditionField(.cloudType)]))
-            print(skyConditions)
             
         } else if elementName == turbulanceConditionField(.turbulenceCondition) {
             turbulanceConditions.append(TurbulanceCondition(intensity: attributeDict[turbulanceConditionField(.intensity)],
@@ -85,7 +84,6 @@ public class TafParser: NSObject, XMLParserDelegate {
         case _ where elementName == ForecastField.forecast.rawValue:
             forecast = Forecast(forecastTimeFrom: currentForecast?[forecastField(.forecastTimeFrom)].metarTafStringToDate, forecastTimeTo: currentForecast?[forecastField(.forecastTimeTo)].metarTafStringToDate, changeIndicator: currentForecast?[forecastField(.changeIndicator)], timeBecoming: currentForecast?[forecastField(.timeBecoming)].metarTafStringToDate, probability: currentForecast?[forecastField(.probability)].toInt, windDirDegrees: currentForecast?[forecastField(.windDirDegrees)].toDouble, windSpeedKts: currentForecast?[forecastField(.windSpeedKts)].toDouble, windGustKts: currentForecast?[forecastField(.windGustKts)].toDouble, windShearHeightFtAGL: currentForecast?[forecastField(.windShearHeightAboveGroundFt)].toInt, windShearDirDegrees: currentForecast?[forecastField(.windShearDirDegrees)].toDouble, windShearSpeedKts: currentForecast?[forecastField(.windShearSpeedKts)].toDouble, visibilityStatuteMiles: currentForecast?[forecastField(.visibilityStatuteMiles)].toDouble, altimeterInHg: currentForecast?[forecastField(.altimeterInHg)].toDouble, verticleVisFt: currentForecast?[forecastField(.vertVisFt)].toDouble, wxString: currentForecast?[forecastField(.weatherString)], notDecoded: currentForecast?[forecastField(.notDecoded)], skyConditions: skyConditions, turbulenceCondition: turbulanceConditions, icingConditions: icingConditions)
             forecasts.append(forecast!)
-            print(forecasts.count)
             forecast = nil
         case _ where tafKeys.contains(elementName):
             currentTaf![elementName] = currentValue
