@@ -55,19 +55,15 @@ public class OpenSkyAPI: ObservableObject {
                 
                 currentTraffic.append(result)
                 foreFlightFormatTraffic.append(ForeFlightTraffic(traffic: result).foreFlightTrafficString)
-            }} catch {
+            }
+        } catch {
                 print("No Soup for YOU!")
         }
+        
         DispatchQueue.main.async {
             self.store.send(currentTraffic)
             self.foreFlightTraffic.send(foreFlightFormatTraffic)
             self.aircraft = currentTraffic
         }
-        
     }
-    
-    
-    
-    
 }
-

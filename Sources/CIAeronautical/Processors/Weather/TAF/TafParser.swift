@@ -12,10 +12,21 @@ import Foundation
 public class TafParser: NSObject, XMLParserDelegate {
     private let taf = TafField.tafMain.rawValue
     private let tafKeys = TafField.allCases.map { $0.rawValue }
+    private let forecastKeys = ForecastField.allCases.map { $0.rawValue }
+    private let skyConditionKeys = SkyConditionField.allCases.map { $0.rawValue }
+    private let turbulanceKeys = TurbulanceConditionField.allCases.map { $0.rawValue }
+    private let icingKeys = IcingConditionField.allCases.map { $0.rawValue }
     private var results: [[String: String]]?
     private var currentTaf: [String: String]?
     private var currentValue: String?
     var tafs: [Taf] = []
+    
+    private var forecast: Forecast?
+    private var currentForecast: [String: String]?
+    private var forecasts: [Forecast] = []
+    private var skyConditions: [SkyCondition] = []
+    private var turbulanceConditions: [TurbulanceCondition] = []
+    private var icingConditions: [IcingCondition] = []
     
     convenience init(data: Data) {
         self.init()
@@ -31,67 +42,84 @@ public class TafParser: NSObject, XMLParserDelegate {
     public func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
         if elementName == taf {
             currentTaf = [:]
+            currentForecast = [:]
+            forecasts = []
+            skyConditions = []
+            turbulanceConditions = []
+            icingConditions = []
         } else if tafKeys.contains(elementName) {
-            currentValue = ""
-        }}
+            if elementName == ForecastField.forecast.rawValue {
+                forecast = Forecast()
+            }
+        } else if elementName == skyConditionField(.skyCondition) {
+            skyConditions.append(SkyCondition(skyCover: attributeDict[skyConditionField(.skyCover)],
+                                              cloudBaseFtAgl: attributeDict[skyConditionField(.cloudBaseFtAGL)].toDouble,
+                                              cloudType: attributeDict[skyConditionField(.cloudType)]))
+            
+        } else if elementName == turbulanceConditionField(.turbulenceCondition) {
+            turbulanceConditions.append(TurbulanceCondition(intensity: attributeDict[turbulanceConditionField(.intensity)],
+                                                            minAltFtAgl: attributeDict[turbulanceConditionField(.minAltFtAGL)]?.toDouble,
+                                                            maxAltFtAgl: attributeDict[turbulanceConditionField(.maxAltFtAGL)].toDouble))
+        } else if elementName == icingConditionField(.icingCondition) {
+            icingConditions.append(IcingCondition(intensity: attributeDict[icingConditionField(.intensity)],
+                                                  minAltFtAgl: attributeDict[icingConditionField(.minAltFtAGL)]?.toDouble,
+                                                  maxAltFtAgl: attributeDict[icingConditionField(.maxAltFtAGL)]?.toDouble))
+        }
+        currentValue = ""
+    }
     
     public func parser(_ parser: XMLParser, foundCharacters string: String) {
         currentValue? += string
     }
     
-    
     public func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
-        if elementName == taf {
+        switch elementName {
+        case _ where elementName == taf:
             results!.append(currentTaf!)
             currentTaf = nil
-        } else if tafKeys.contains(elementName) {
+        case _ where elementName == ForecastField.forecast.rawValue:
+            forecast = Forecast(forecastTimeFrom: currentForecast?[forecastField(.forecastTimeFrom)].metarTafStringToDate, forecastTimeTo: currentForecast?[forecastField(.forecastTimeTo)].metarTafStringToDate, changeIndicator: currentForecast?[forecastField(.changeIndicator)], timeBecoming: currentForecast?[forecastField(.timeBecoming)].metarTafStringToDate, probability: currentForecast?[forecastField(.probability)].toInt, windDirDegrees: currentForecast?[forecastField(.windDirDegrees)].toDouble, windSpeedKts: currentForecast?[forecastField(.windSpeedKts)].toDouble, windGustKts: currentForecast?[forecastField(.windGustKts)].toDouble, windShearHeightFtAGL: currentForecast?[forecastField(.windShearHeightAboveGroundFt)].toInt, windShearDirDegrees: currentForecast?[forecastField(.windShearDirDegrees)].toDouble, windShearSpeedKts: currentForecast?[forecastField(.windShearSpeedKts)].toDouble, visibilityStatuteMiles: currentForecast?[forecastField(.visibilityStatuteMiles)].toDouble, altimeterInHg: currentForecast?[forecastField(.altimeterInHg)].toDouble, verticleVisFt: currentForecast?[forecastField(.vertVisFt)].toDouble, wxString: currentForecast?[forecastField(.weatherString)], notDecoded: currentForecast?[forecastField(.notDecoded)], skyConditions: skyConditions, turbulenceCondition: turbulanceConditions, icingConditions: icingConditions)
+            forecasts.append(forecast!)
+            forecast = nil
+        case _ where tafKeys.contains(elementName):
             currentTaf![elementName] = currentValue
             currentValue = nil
-        }}
+            
+        case _ where forecastKeys.contains(elementName) && elementName != forecastField(.forecast):
+            currentForecast![elementName] = currentValue
+            currentValue = nil
+        default:
+            print("default")
+        }
+    }
     
     public func parserDidEndDocument(_ parser: XMLParser) {
-    if let resultTafs = results {
-        for taf in resultTafs {
-            let wx = Taf(rawText: taf[tafField(.rawText)],
-                         stationId: taf[tafField(.stationId)],
-                         issueTime: taf[tafField(.issueTime)],
-                         bulletinTime: taf[tafField(.bulletinTime)],
-                         validTimeFrom: taf[tafField(.validTimeFrom)],
-                         validTimeTo: taf[tafField(.validTimeTo)],
-                         remarks: taf[tafField(.remarks)],
-                         latitude: taf[tafField(.latitude)],
-                         longitude: taf[tafField(.longitude)],
-                         elevationM: taf[tafField(.elevationM)],
-                         forecast: taf[tafField(.forecast)],
-                         timeFrom: taf[tafField(.timeFrom)],
-                         timeTo: taf[tafField(.timeTo)],
-                         changeIndicator: taf[tafField(.changeIndicator)],
-                         timeBecoming: taf[tafField(.timeBecoming)],
-                         probability: taf[tafField(.probability)],
-                         windDirDegrees: taf[tafField(.windDirDegrees)],
-                         windSpeedKts: taf[tafField(.windSpeedKts)],
-                         windGustKts: taf[tafField(.windGustKts)],
-                         windShearHeightAboveGroundFt: taf[tafField(.windShearHeightAboveGroundFt)],
-                         windShearDirDegrees: taf[tafField(.windShearDirDegrees)],
-                         windShearSpeedKts: taf[tafField(.windShearSpeedKts)],
-                         visibilityStatuteMiles: taf[tafField(.visibilityStatuteMiles)],
-                         altimeterInHg: taf[tafField(.altimeterInHg)],
-                         vertVisFt: taf[tafField(.vertVisFt)],
-                         weatherString: taf[tafField(.weatherString)],
-                         notDecoded: taf[tafField(.notDecoded)],
-                         skyCondition: taf[tafField(.skyCondition)],
-                         turbulenceCondition: taf[tafField(.turbulenceCondition)],
-                         icingCondition: taf[tafField(.icingCondition)],
-                         temperature: taf[tafField(.temperature)],
-                         validTime: taf[tafField(.validTime)],
-                         surfaceTempC: taf[tafField(.surfcaeTempC)],
-                         maxTempC: taf[tafField(.maxTempC)],
-                         minTempC: taf[tafField(.minTempC)])
-            tafs.append(wx)
-        }}}
+        if let resultTafs = results {
+            for taf in resultTafs {
+                let wx = Taf(rawText: taf[tafField(.rawText)], stationId: taf[tafField(.stationId)], issueTime: taf[tafField(.issueTime)].metarTafStringToDate, bulletinTime: taf[tafField(.bulletinTime)].metarTafStringToDate, validTimeFrom: taf[tafField(.validTimeFrom)].metarTafStringToDate, validTimeTo: taf[tafField(.validTimeTo)].metarTafStringToDate, remarks: taf[tafField(.remarks)], latitude: taf[tafField(.latitude)].toDouble, longitude: taf[tafField(.longitude)].toDouble, elevationM: taf[tafField(.elevationM)].toDouble, forecast: forecasts, temperature: taf[tafField(.temperature)].toDouble, validTime: taf[tafField(.validTime)].metarTafStringToDate, surfaceTempC: taf[tafField(.surfcaeTempC)].toDouble, maxTempC: taf[tafField(.maxTempC)].toDouble, minTempC: taf[tafField(.minTempC)].toDouble)
+                tafs.append(wx)
+            }
+        }
+    }
     
-    fileprivate func tafField(_ tf: TafField) -> String {
-        return tf.rawValue
+    fileprivate func tafField(_ f: TafField) -> String {
+        return f.rawValue
+    }
+    
+    fileprivate func forecastField(_ f: ForecastField) -> String {
+        return f.rawValue
+    }
+    
+    fileprivate func skyConditionField(_ f: SkyConditionField) -> String {
+        return f.rawValue
+    }
+    
+    fileprivate func turbulanceConditionField(_ f: TurbulanceConditionField) -> String {
+        return f.rawValue
+    }
+    
+    fileprivate func icingConditionField(_ f: IcingConditionField) -> String {
+        return f.rawValue
     }
     
     public func parser(_ parser: XMLParser, parseErrorOccurred parseError: Error) {

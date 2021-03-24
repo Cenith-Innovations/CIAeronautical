@@ -39,7 +39,6 @@ public enum MetarField: String, CaseIterable {
     case precipLast24HoursIn = "pcp24hr_in"
     case snowIn = "snow_in"
     case vertVisFt = "vert_vis_ft"
-    case metarType = "metar_type"
+    case metarType = "metar_type" //"METAR" or "SPECI"
     case elevationM = "elevation_m"
 }
-
