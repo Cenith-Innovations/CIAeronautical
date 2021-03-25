@@ -20,7 +20,6 @@ public class MetarParser: NSObject, XMLParserDelegate {
     
     convenience init(data: Data) {
         self.init()
-        let str = String(data: data, encoding: .utf8)
         let parser = XMLParser(data: data)
         parser.delegate = self
         let _ = parser.parse()
