@@ -31,7 +31,7 @@ public struct Taf: Identifiable, Loopable {
         self.minTempC = minTempC
     }
     
-    public static let dummyTAF = Taf(id: UUID(), rawText: "TAF AMD KBAB 251540Z 2515/2617 33009KT 9999 FEW080 QNH2979INS BECMG 2523/2524 23009KT 9999 SCT045 QNH2973INS BECMG 2604/2605 15009KT 9999 SKC QNH2979INS TX18/2523Z TN06/2515Z", stationId: "KBAB", issueTime: Date(), bulletinTime: Date(), validTimeFrom: Date(), validTimeTo: Date(), remarks: nil, latitude: 39.13, longitude: -121.43, elevationM: 31.0, forecast: [Forecast.dummyForcast, Forecast.dummyForcast], temperature: 10.0, validTime: Date(), surfaceTempC: 12.0, maxTempC: 32.0, minTempC: 12.0)
+    public static let dummyTAF = Taf(id: UUID(), rawText: "TAF AMD KBAB 251540Z 2515/2617 33009KT 9999 FEW080 QNH2979INS BECMG 2523/2524 23009KT 9999 SCT045 QNH2973INS BECMG 2604/2605 15009KT 9999 SKC QNH2979INS TX18/2523Z TN06/2515Z", stationId: "KBAB", issueTime: Date(), bulletinTime: Date(), validTimeFrom: Date(), validTimeTo: Date(), remarks: nil, latitude: 39.13, longitude: -121.43, elevationM: 31.0, forecast: [Forecast.dummyForcast1, Forecast.dummyForcast2, Forecast.dummyForcast3], temperature: 10.0, validTime: Date(), surfaceTempC: 12.0, maxTempC: 32.0, minTempC: 12.0)
 
     public var id = UUID()
     public var rawText: String?
@@ -54,7 +54,11 @@ public struct Taf: Identifiable, Loopable {
 
 public struct Forecast: Identifiable   {
     
-    public static var dummyForcast = Forecast(forecastTimeFrom: Date(), forecastTimeTo: Date(), changeIndicator: nil, timeBecoming: Date(), probability: 0, windDirDegrees: 230, windSpeedKts: 21, windGustKts: 10, windShearHeightFtAGL: 4000, windShearDirDegrees: 230, windShearSpeedKts: 10, visibilityStatuteMiles: 10, altimeterInHg: 30.01, verticleVisFt: 10, wxString: "", notDecoded: "", skyConditions: [SkyCondition.dummySkyCondition, SkyCondition.dummySkyCondition], turbulenceCondition: [TurbulanceCondition.dummyTurbulanceCon, TurbulanceCondition.dummyTurbulanceCon], icingConditions: [IcingCondition.dummyIcingCon, IcingCondition.dummyIcingCon])
+    public static var dummyForcast1 = Forecast(forecastTimeFrom: Date(), forecastTimeTo: Date(), changeIndicator: nil, timeBecoming: nil, probability: 0, windDirDegrees: 230, windSpeedKts: 21, windGustKts: 10, windShearHeightFtAGL: 4000, windShearDirDegrees: 230, windShearSpeedKts: 10, visibilityStatuteMiles: 10, altimeterInHg: 30.01, verticleVisFt: 10, wxString: "", notDecoded: "", skyConditions: [SkyCondition.dummySkyCondition, SkyCondition.dummySkyCondition], turbulenceCondition: [TurbulanceCondition.dummyTurbulanceCon, TurbulanceCondition.dummyTurbulanceCon], icingConditions: [IcingCondition.dummyIcingCon, IcingCondition.dummyIcingCon])
+    
+    public static var dummyForcast2 = Forecast(forecastTimeFrom: nil, forecastTimeTo: nil, changeIndicator: nil, timeBecoming: Date(), probability: 0, windDirDegrees: 230, windSpeedKts: 21, windGustKts: 10, windShearHeightFtAGL: 4000, windShearDirDegrees: 230, windShearSpeedKts: 10, visibilityStatuteMiles: 5.59, altimeterInHg: 30.01, verticleVisFt: 10, wxString: "-SHRA", notDecoded: "", skyConditions: [SkyCondition.dummySkyCondition, SkyCondition.dummySkyCondition], turbulenceCondition: [TurbulanceCondition.dummyTurbulanceCon, TurbulanceCondition.dummyTurbulanceCon], icingConditions: [IcingCondition.dummyIcingCon, IcingCondition.dummyIcingCon])
+    
+    public static var dummyForcast3 = Forecast(forecastTimeFrom: Date(), forecastTimeTo: Date(), changeIndicator: nil, timeBecoming: nil, probability: 0, windDirDegrees: 230, windSpeedKts: 21, windGustKts: 10, windShearHeightFtAGL: 4000, windShearDirDegrees: 230, windShearSpeedKts: 10, visibilityStatuteMiles: 8.95, altimeterInHg: 30.01, verticleVisFt: 10, wxString: "", notDecoded: "", skyConditions: [SkyCondition.dummySkyCondition, SkyCondition.dummySkyCondition], turbulenceCondition: [TurbulanceCondition.dummyTurbulanceCon, TurbulanceCondition.dummyTurbulanceCon], icingConditions: [IcingCondition.dummyIcingCon, IcingCondition.dummyIcingCon])
     
     public init(forecastTimeFrom: Date? = nil, forecastTimeTo: Date? = nil, changeIndicator: String? = nil, timeBecoming: Date? = nil, probability: Int? = nil, windDirDegrees: Double? = nil, windSpeedKts: Double? = nil, windGustKts: Double? = nil, windShearHeightFtAGL: Int? = nil, windShearDirDegrees: Double? = nil, windShearSpeedKts: Double? = nil, visibilityStatuteMiles: Double? = nil, altimeterInHg: Double? = nil, verticleVisFt: Double? = nil, wxString: String? = nil, notDecoded: String? = nil, skyConditions: [SkyCondition]? = nil, turbulenceCondition: [TurbulanceCondition]? = nil, icingConditions: [IcingCondition]? = nil) {
         self.forecastTimeFrom = forecastTimeFrom
@@ -144,7 +148,3 @@ public struct IcingCondition {
     public var minAltFtAgl: Double?
     public var maxAltFtAgl: Double?
 }
-
-
-
-

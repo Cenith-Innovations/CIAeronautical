@@ -261,19 +261,21 @@ public class SunTime: ObservableObject {
         return numberOfDays
     }
     
+//    "dd.MM.yy-HH:mm'Z'"
+    // FIXME:‼️ This needs to be cleaned up... I know better now
     public func times() -> (zuluDate: String, zuluTime: String, localDate: String, localTime: String) {
         let today = Date()
         let zuluTimeZone = TimeZone(identifier: "UTC")
         let zuluDateFormat = DateFormatter()
         let zuluTimeFormat = DateFormatter()
-        zuluDateFormat.dateStyle = .medium
+        zuluDateFormat.dateFormat = "dd.mm.yy"
         zuluDateFormat.timeZone = zuluTimeZone
-        zuluTimeFormat.dateFormat = "HH:mm"
+        zuluTimeFormat.dateFormat = "HH:mm:ss"
         zuluTimeFormat.timeZone = zuluTimeZone
         let localDateFormat = DateFormatter()
         let localTimeFormat = DateFormatter()
-        localDateFormat.dateStyle = .medium
-        localTimeFormat.timeStyle = .medium
+        localDateFormat.dateFormat = "dd.mm.yy"
+        localTimeFormat.dateFormat = "HH:mm:ss"
         let zuluDate = zuluDateFormat.string(from: today)
         let zuluTime = zuluTimeFormat.string(from: today)
         let localDate = localDateFormat.string(from: today)

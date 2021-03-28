@@ -29,6 +29,7 @@ public class PlanningAPI: ObservableObject {
     ///}
     ///```
     @Published public var notams: [String: [Notam]] = [:]
+    @Published public var notamsForIcao: [Notam] = []
     
     // MARK: - 🔅 Publishers: METARs
     /// Publisher that contains the METAR for the input ICAO.
@@ -182,6 +183,45 @@ public class PlanningAPI: ObservableObject {
         task.resume()
 
     }
+    
+    /// Retrieves the notams for the corresponding array of icao.
+    /// - Parameter icaos: an array of desired icao.
+    public func getNotamsFor(_ icao: String) {
+        let url = URL(string: "https://www.notams.faa.gov/dinsQueryWeb/queryRetrievalMapAction.do")!
+        var request = URLRequest(url: url)
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpMethod = "POST"
+        let postData = "Report=Report&actionType=notamRetrievalByICAOs&retrieveLocId=\(icao)"
+        request.httpBody = postData.data(using: .utf8)
+        let session = URLSession(configuration: .ephemeral)
+        let task = session.dataTask(with: request) { (data, response, error) in
+            guard let data = data, error == nil else {
+                print("Data not found, error encountered: \(error!)")
+                return
+            }
+            if let httpStatus = response as? HTTPURLResponse, httpStatus.statusCode != 200 {
+                print("Recieved non-200 response, something is ill-formed with the POST request")
+                return
+            }
+            let responseString = String(decoding: data, as: UTF8.self)
+            let currentNotams = NotamParser(htmlData: responseString).notams
+            DispatchQueue.main.async {
+                //Object Oriented
+                var tempNotams:[String: [Notam]] = [:]
+                for (icao, notamList) in currentNotams {
+                    var notams: [Notam] = []
+                    for notam in notamList {
+                        notams.append(Notam(notam: notam))
+                    }
+                    tempNotams[icao] = notams
+                }
+                self.notamsForIcao = tempNotams[icao] ?? []
+            }
+        }
+        task.resume()
+
+    }
+    
     
     // MARK: - 🔅 Bird Conditions - AHAS
     /// Goes and fetches the current bird condition for an area. The areas are defined in AhasInputs.swift.
