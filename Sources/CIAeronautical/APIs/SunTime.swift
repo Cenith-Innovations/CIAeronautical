@@ -268,13 +268,13 @@ public class SunTime: ObservableObject {
         let zuluTimeZone = TimeZone(identifier: "UTC")
         let zuluDateFormat = DateFormatter()
         let zuluTimeFormat = DateFormatter()
-        zuluDateFormat.dateFormat = "dd.mm.yy"
+        zuluDateFormat.dateFormat = "dd.MM.yy"
         zuluDateFormat.timeZone = zuluTimeZone
         zuluTimeFormat.dateFormat = "HH:mm:ss"
         zuluTimeFormat.timeZone = zuluTimeZone
         let localDateFormat = DateFormatter()
         let localTimeFormat = DateFormatter()
-        localDateFormat.dateFormat = "dd.mm.yy"
+        localDateFormat.dateFormat = "dd.MM.yy"
         localTimeFormat.dateFormat = "HH:mm:ss"
         let zuluDate = zuluDateFormat.string(from: today)
         let zuluTime = zuluTimeFormat.string(from: today)

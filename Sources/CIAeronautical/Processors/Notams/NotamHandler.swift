@@ -147,7 +147,24 @@ public struct NotamHandler {
                 let startIndex = n.index(rangeRWY.lowerBound, offsetBy: 3)
                 let endIndex = n.index(rangeRWY.upperBound, offsetBy: -5)
                 return String(n[startIndex..<endIndex])
-            }}
+            }
+        }
         return nil
     }
+    ///Returns RWY ID's for notamed wet RWY
+    public static func getRXWetRunways(notam: String) -> [String] {
+        let n = removeNewLinesAndSpaces(notam: notam)
+        let regexRWY_ = #"(RWY.*WET)"#
+        if let _ = n.range(of: regexRWY_, options: .regularExpression, range: nil, locale: nil) {
+            let a = n.components(separatedBy: "WET")
+            let b = a[0].components(separatedBy: "RWY")
+            let c = b[1].components(separatedBy: "/")
+            return c
+        }
+        return []
+    }
 }
+
+
+//RWY 05/23 WET 1/4IN OBSERVED AT 2103312045
+//RWY 04 FICON 5/5/5 100 PCT WET OBS AT 2103311941
