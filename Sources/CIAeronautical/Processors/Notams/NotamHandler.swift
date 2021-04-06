@@ -146,7 +146,12 @@ public struct NotamHandler {
             if let rangeRWY = n.range(of: regexRWY, options: .regularExpression, range: nil, locale: nil) {
                 let startIndex = n.index(rangeRWY.lowerBound, offsetBy: 3)
                 let endIndex = n.index(rangeRWY.upperBound, offsetBy: -5)
-                return String(n[startIndex..<endIndex])
+                let rwy = String(n[startIndex..<endIndex])
+                if rwy.count <= 3 {
+                    return String(n[startIndex..<endIndex])
+                } else {
+                    return nil
+                }
             }
         }
         return nil
@@ -159,9 +164,26 @@ public struct NotamHandler {
             let a = n.components(separatedBy: "WET")
             let b = a[0].components(separatedBy: "RWY")
             let c = b[1].components(separatedBy: "/")
-            return c
+            let d = c.filter({$0.count <= 3 })
+            return d
         }
         return []
+    }
+    
+    public static func getWetRwys1(from notam: String) -> String? {
+        let n = removeNewLinesAndSpaces(notam: notam)
+        let regex = "WET"
+        let pred = NSPredicate(format: "SELF CONTAINS %@", regex)
+        
+        if pred.evaluate(with: notam) {
+            let regexRWY = #"(RWY.{1,}FICON)"#
+            if let rangeRWY = n.range(of: regexRWY, options: .regularExpression, range: nil, locale: nil) {
+                let startIndex = n.index(rangeRWY.lowerBound, offsetBy: 3)
+                let endIndex = n.index(rangeRWY.upperBound, offsetBy: -5)
+                return String(n[startIndex..<endIndex])
+            }
+        }
+        return nil
     }
 }
 
