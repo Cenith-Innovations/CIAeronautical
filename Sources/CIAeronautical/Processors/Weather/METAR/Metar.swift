@@ -10,7 +10,7 @@ import Foundation
 
 /// METAR... Meteorological conditions
 public struct Metar: Hashable ,Loopable {
-    public  init(id: UUID = UUID(), rawText: String? = nil, stationId: String? = nil, observationTime: Date? = nil, latitude: Double? = nil, longitude: Double? = nil, tempC: Double? = nil, dewPointC: Double? = nil, windDirDegrees: Double? = nil, windSpeedKts: Double? = nil, windGustKts: Double? = nil, visibilityStatuteMiles: Double? = nil, altimeterInHg: Double? = nil, seaLevelPressureMb: Double? = nil, qualityControlFlags: String? = nil, wxString: String? = nil, skyCondition: [SkyCondition?]? = nil, flightCategory: String? = nil, threeHrPressureTendencyMb: String? = nil, maxTempPastSixHoursC: Double? = nil, minTempPastSixHoursC: Double? = nil, maxTemp24HrC: Double? = nil, minTemp24HrC: Double? = nil, precipIn: Double? = nil, precipLast3HoursIn: Double? = nil, precipLast6HoursIn: Double? = nil, precipLast24HoursIn: Double? = nil, snowIn: Double? = nil, vertVisFt: Double? = nil, metarType: String? = nil, elevationM: Double? = nil) {
+    public  init(id: UUID = UUID(), rawText: String? = nil, stationId: String? = nil, observationTime: Date? = nil, latitude: Double? = nil, longitude: Double? = nil, tempC: Double? = nil, dewPointC: Double? = nil, windDirDegrees: Double? = nil, windSpeedKts: Double? = nil, windGustKts: Double? = nil, visibilityStatuteMiles: Double? = nil, altimeterInHg: Double? = nil, seaLevelPressureMb: Double? = nil, qualityControlFlags: String? = nil, wxString: String? = nil, skyCondition: [SkyCondition] = [], flightCategory: String? = nil, threeHrPressureTendencyMb: String? = nil, maxTempPastSixHoursC: Double? = nil, minTempPastSixHoursC: Double? = nil, maxTemp24HrC: Double? = nil, minTemp24HrC: Double? = nil, precipIn: Double? = nil, precipLast3HoursIn: Double? = nil, precipLast6HoursIn: Double? = nil, precipLast24HoursIn: Double? = nil, snowIn: Double? = nil, vertVisFt: Double? = nil, metarType: String? = nil, elevationM: Double? = nil) {
         self.id = id
         self.rawText = rawText
         self.stationId = stationId
@@ -72,7 +72,7 @@ public struct Metar: Hashable ,Loopable {
     public var seaLevelPressureMb: Double?
     public var qualityControlFlags: String?
     public var wxString: String?
-    public var skyCondition: [SkyCondition?]?
+    public var skyCondition: [SkyCondition]
     public var flightCategory: String?
     public var threeHrPressureTendencyMb: String?
     public var maxTempPastSixHoursC: Double?

@@ -45,7 +45,7 @@ public class MetarParser: NSObject, XMLParserDelegate {
         currentValue? += string
     }
     
-    var skyConditions: [SkyCondition?] = []
+    var skyConditions: [SkyCondition] = []
     public func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         if elementName == metar {
             results!.append(currentMetar!)
