@@ -104,7 +104,7 @@ public struct Forecast: Identifiable   {
     public var icingConditions: [IcingCondition]?
 }
 
-public struct SkyCondition: Equatable {
+public struct SkyCondition: Equatable, Hashable {
     
     public static let dummySkyCondition = SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 2000, cloudType: nil)
     
