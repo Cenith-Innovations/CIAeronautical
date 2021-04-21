@@ -31,10 +31,13 @@ public struct NotamHandler {
     public static func getAllClosedRunways(notam: String) -> [String] {
         var runways: [String] = []
         var n = removeNewLinesAndSpaces(notam: notam)
+        print(n)
         if let twyStart = n.range(of: "TWY")?.upperBound {
             if let clsdEnd = n.range(of: "CLSD")?.lowerBound{
-                let range = twyStart...clsdEnd
-                n.removeSubrange(range)
+                if twyStart < clsdEnd {
+                    let range = twyStart...clsdEnd
+                    n.removeSubrange(range)
+                }
             }}
         if let startIndex = n.range(of: "RWY")?.upperBound {
             if let endIndex = n.range(of: "CLSD")?.lowerBound {
