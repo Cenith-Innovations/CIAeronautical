@@ -11,11 +11,13 @@ let package = Package(
             name: "CIAeronautical",
             targets: ["CIAeronautical"]),
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/Cenith-Innovations/CIFoundation.git", .upToNextMajor(from: "1.0.4"))
+    ],
     targets: [
         .target(
             name: "CIAeronautical",
-            dependencies: []),
+            dependencies: ["CIFoundation"]),
         .testTarget(
             name: "CIAeronauticalTests",
             dependencies: ["CIAeronautical"]),
