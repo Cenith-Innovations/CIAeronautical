@@ -55,12 +55,12 @@ public extension Double {
         return self < 0 ? self * -1 : self
     }
     
-    enum CoordType {
+    enum CoordinateType {
         case lat
         case long
     }
     
-    func coordToString(decPlaces: Int, coordType: self.CoordType) -> String {
+    func coordToString(decPlaces: Int, coordType: CoordinateType) -> String {
         switch coordType {
         case .lat:
             return self.toStringWithDec(decPlaces).replacingOccurrences(of: "-", with: "") + (self < 0 ? "°S" : "°N")
