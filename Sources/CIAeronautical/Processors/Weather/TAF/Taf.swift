@@ -52,13 +52,13 @@ public struct Forecast   {
     public var icingConditions: [IcingCondition]?
 }
 
-public struct SkyCondition: Equatable {
+public struct SkyCondition: Equatable, Hashable {
     public var skyCover: String?
     public var cloudBaseFtAgl: Double?
     public var cloudType: String?
 }
 
-public struct TurbulanceCondition: Equatable {
+public struct TurbulanceCondition: Equatable, Hashable {
     public var intensity: String?
     public var minAltFtAgl: Double?
     public var maxAltFtAgl: Double?
