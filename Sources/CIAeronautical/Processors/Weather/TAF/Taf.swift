@@ -64,7 +64,7 @@ public struct TurbulanceCondition: Equatable {
     public var maxAltFtAgl: Double?
 }
 
-public struct IcingCondition {
+public struct IcingCondition: Hashable {
     public var intensity: String?
     public var minAltFtAgl: Double?
     public var maxAltFtAgl: Double?
