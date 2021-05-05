@@ -15,7 +15,7 @@ let package = Package(
     targets: [
         .target(
             name: "CIAeronautical",
-            dependencies: []),
+            dependencies: ["CIFoundation"]),
         .testTarget(
             name: "CIAeronauticalTests",
             dependencies: ["CIAeronautical"]),
