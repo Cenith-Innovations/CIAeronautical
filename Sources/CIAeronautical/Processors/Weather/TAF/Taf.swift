@@ -10,7 +10,7 @@ import Foundation
 import CIFoundation
 
 /// TAF: Terminal Area Forcast
-public struct Taf: Identifiable, Loopable {
+public struct Taf: Identifiable, Loopable, Hashable {
     public var id = UUID()
     public var rawText: String?
     public var stationId: String?
@@ -30,7 +30,7 @@ public struct Taf: Identifiable, Loopable {
     public var minTempC: Double?
 }
 
-public struct Forecast   {
+public struct Forecast: Hashable   {
     public var forecastTimeFrom: Date?
     public var forecastTimeTo: Date?
     public var changeIndicator: String?
