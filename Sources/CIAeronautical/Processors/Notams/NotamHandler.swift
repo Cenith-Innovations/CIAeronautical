@@ -31,18 +31,27 @@ public struct NotamHandler {
     public static func getAllClosedRunways(notam: String) -> [String] {
         var runways: [String] = []
         var n = removeNewLinesAndSpaces(notam: notam)
+        
         if let twyStart = n.range(of: "TWY")?.upperBound {
             if let clsdEnd = n.range(of: "CLSD")?.lowerBound{
-                let range = twyStart...clsdEnd
-                n.removeSubrange(range)
-            }}
+                if twyStart <= clsdEnd {
+                    let range = twyStart...clsdEnd
+                    n.removeSubrange(range)
+                }
+            }
+        }
+        
         if let startIndex = n.range(of: "RWY")?.upperBound {
             if let endIndex = n.range(of: "CLSD")?.lowerBound {
                 let closedRunway = n[startIndex..<endIndex]
                 let runway = String(closedRunway).components(separatedBy: "/")
+                
                 for rwy in runway {
                     runways.append(rwy)
-                }}}
+                }
+            }
+        }
+        
         var closedRwys: [String] = []
         for runway in runways {
             closedRwys.append(runway)
@@ -85,7 +94,6 @@ public struct NotamHandler {
         return (start: start, end: end)
     }
     
-    
     ///Returns Created Date
     public static func getCreationDate(notam: String) -> Date? {
         let n = removeNewLinesAndSpaces(notam: notam)
@@ -95,7 +103,6 @@ public struct NotamHandler {
         let created = String(n[startIndex..<endIndex])
         return created.getDateFrom(ofType: .notam)
     }
-    
     
     ///Returns list of closed runways from an array of notams
     public static func getRXClosedRwysFrom(notam: String) -> Set<String>? {
@@ -147,7 +154,8 @@ public struct NotamHandler {
                 let startIndex = n.index(rangeRWY.lowerBound, offsetBy: 3)
                 let endIndex = n.index(rangeRWY.upperBound, offsetBy: -5)
                 return String(n[startIndex..<endIndex])
-            }}
+            }
+        }
         return nil
     }
 }
