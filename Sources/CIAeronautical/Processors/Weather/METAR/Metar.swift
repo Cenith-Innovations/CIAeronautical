@@ -21,6 +21,39 @@ public struct Metar: Hashable, Loopable {
         hasher.combine(stationId)
     }
     
+    public init(rawText: String, stationId: String, observationTime: Date, latitude: Double, longitude: Double, tempC: Double, dewPointC: Double, windDirDegrees: Double, windSpeedKts: Double, windGustKts: Double, visibilityStatuteMiles: Double, altimeterInHg: Double, seaLevelPressureMb: Double, qualityControlFlags: String, wxString: String?, skyCondition: [SkyCondition?]?, flightCategory: String, threeHrPressureTendencyMb: String?, maxTempPastSixHoursC: Double, minTempPastSixHoursC: Double, maxTemp24HrC: Double, minTemp24HrC: Double, precipIn: Double, precipLast3HoursIn: Double, precipLast6HoursIn: Double, precipLast24HoursIn: Double, snowIn: Double, vertVisFt: Double, metarType: String?, elevationM: Double) {
+        self.rawText = rawText
+        self.stationId = stationId
+        self.observationTime = observationTime
+        self.latitude = latitude
+        self.longitude = longitude
+        self.tempC = tempC
+        self.dewPointC = dewPointC
+        self.windDirDegrees = windDirDegrees
+        self.windSpeedKts = windSpeedKts
+        self.windGustKts = windGustKts
+        self.visibilityStatuteMiles = visibilityStatuteMiles
+        self.altimeterInHg = altimeterInHg
+        self.seaLevelPressureMb = seaLevelPressureMb
+        self.qualityControlFlags = qualityControlFlags
+        self.wxString = wxString
+        self.skyCondition = skyCondition
+        self.flightCategory = flightCategory
+        self.threeHrPressureTendencyMb = threeHrPressureTendencyMb
+        self.maxTempPastSixHoursC = maxTempPastSixHoursC
+        self.minTempPastSixHoursC = minTempPastSixHoursC
+        self.maxTemp24HrC = maxTemp24HrC
+        self.minTemp24HrC = minTemp24HrC
+        self.precipIn = precipIn
+        self.precipLast3HoursIn = precipLast3HoursIn
+        self.precipLast6HoursIn = precipLast6HoursIn
+        self.precipLast24HoursIn = precipLast24HoursIn
+        self.snowIn = snowIn
+        self.vertVisFt = vertVisFt
+        self.metarType = metarType
+        self.elevationM = elevationM
+    }
+    
     public var id = UUID()
     public var rawText: String?
     public var stationId: String?

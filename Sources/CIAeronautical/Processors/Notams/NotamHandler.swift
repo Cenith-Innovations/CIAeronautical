@@ -158,4 +158,34 @@ public struct NotamHandler {
         }
         return nil
     }
+    
+    ///Returns RWY ID's for notamed wet RWY
+    public static func getRXWetRunways(notam: String) -> [String] {
+        let n = removeNewLinesAndSpaces(notam: notam)
+        let regexRWY_ = #"(RWY.*WET)"#
+        if let _ = n.range(of: regexRWY_, options: .regularExpression, range: nil, locale: nil) {
+            let a = n.components(separatedBy: "WET")
+            let b = a[0].components(separatedBy: "RWY")
+            let c = b[1].components(separatedBy: "/")
+            let d = c.filter({$0.count <= 3 })
+            return d
+        }
+        return []
+    }
+    
+    public static func getWetRwys1(from notam: String) -> String? {
+        let n = removeNewLinesAndSpaces(notam: notam)
+        let regex = "WET"
+        let pred = NSPredicate(format: "SELF CONTAINS %@", regex)
+        
+        if pred.evaluate(with: notam) {
+            let regexRWY = #"(RWY.{1,}FICON)"#
+            if let rangeRWY = n.range(of: regexRWY, options: .regularExpression, range: nil, locale: nil) {
+                let startIndex = n.index(rangeRWY.lowerBound, offsetBy: 3)
+                let endIndex = n.index(rangeRWY.upperBound, offsetBy: -5)
+                return String(n[startIndex..<endIndex])
+            }
+        }
+        return nil
+    }
 }
