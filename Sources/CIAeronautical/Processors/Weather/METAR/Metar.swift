@@ -9,9 +9,19 @@
 import Foundation
 
 /// METAR... Meteorological conditions
-public struct Metar: Hashable ,Loopable {
-    public  init(id: UUID = UUID(), rawText: String? = nil, stationId: String? = nil, observationTime: Date? = nil, latitude: Double? = nil, longitude: Double? = nil, tempC: Double? = nil, dewPointC: Double? = nil, windDirDegrees: Double? = nil, windSpeedKts: Double? = nil, windGustKts: Double? = nil, visibilityStatuteMiles: Double? = nil, altimeterInHg: Double? = nil, seaLevelPressureMb: Double? = nil, qualityControlFlags: String? = nil, wxString: String? = nil, skyCondition: [SkyCondition] = [], flightCategory: String? = nil, threeHrPressureTendencyMb: String? = nil, maxTempPastSixHoursC: Double? = nil, minTempPastSixHoursC: Double? = nil, maxTemp24HrC: Double? = nil, minTemp24HrC: Double? = nil, precipIn: Double? = nil, precipLast3HoursIn: Double? = nil, precipLast6HoursIn: Double? = nil, precipLast24HoursIn: Double? = nil, snowIn: Double? = nil, vertVisFt: Double? = nil, metarType: String? = nil, elevationM: Double? = nil) {
-        self.id = id
+public struct Metar: Hashable, Loopable {
+    public static var DummySkyConditions: [SkyCondition] = [
+        SkyCondition(skyCover: "OVC", cloudBaseFtAgl: 500),
+        SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 700)
+    ]
+    
+    public static var DummyMETAR = Metar(rawText: "KBAB 130158Z AUTO 33009KT 10SM CLR 17/M01 A3008 RMK AO2 SLP189 T01661006 $", stationId: "KBAB", observationTime: Date(), latitude: 45.0, longitude: -121.0, tempC: 0, dewPointC: 0, windDirDegrees: 35, windSpeedKts: 10, windGustKts: 10, visibilityStatuteMiles: 10, altimeterInHg: 30.01, seaLevelPressureMb: 0, qualityControlFlags: "\n        TRUE\n        TRUE\n        TRUE\n      ", wxString: nil, skyCondition: Metar.DummySkyConditions, flightCategory: "VFR", threeHrPressureTendencyMb: nil, maxTempPastSixHoursC: 0, minTempPastSixHoursC: 0, maxTemp24HrC: 0, minTemp24HrC: 0, precipIn: 0, precipLast3HoursIn: 0, precipLast6HoursIn: 0, precipLast24HoursIn: 0, snowIn: 0, vertVisFt: 0, metarType: nil, elevationM: 0)
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(stationId)
+    }
+    
+    public init(rawText: String, stationId: String, observationTime: Date, latitude: Double, longitude: Double, tempC: Double, dewPointC: Double, windDirDegrees: Double, windSpeedKts: Double, windGustKts: Double, visibilityStatuteMiles: Double, altimeterInHg: Double, seaLevelPressureMb: Double, qualityControlFlags: String, wxString: String?, skyCondition: [SkyCondition?]?, flightCategory: String, threeHrPressureTendencyMb: String?, maxTempPastSixHoursC: Double, minTempPastSixHoursC: Double, maxTemp24HrC: Double, minTemp24HrC: Double, precipIn: Double, precipLast3HoursIn: Double, precipLast6HoursIn: Double, precipLast24HoursIn: Double, snowIn: Double, vertVisFt: Double, metarType: String?, elevationM: Double) {
         self.rawText = rawText
         self.stationId = stationId
         self.observationTime = observationTime
@@ -44,18 +54,6 @@ public struct Metar: Hashable ,Loopable {
         self.elevationM = elevationM
     }
     
-    
-    public static var DummySkyConditions: [SkyCondition] = [
-        SkyCondition(skyCover: "OVC", cloudBaseFtAgl: 500),
-        SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 700)
-    ]
-    
-    public static var DummyMETAR = Metar(rawText: "KBAB 130158Z AUTO 33009KT 10SM CLR 17/M01 A3008 RMK AO2 SLP189 T01661006 $", stationId: "KBAB", observationTime: Date(), latitude: 45.0, longitude: -121.0, tempC: 10.3, dewPointC: 2.2, windDirDegrees: 35, windSpeedKts: 10, windGustKts: 10, visibilityStatuteMiles: 10, altimeterInHg: 30.01, seaLevelPressureMb: 0, qualityControlFlags: "\n        TRUE\n        TRUE\n        TRUE\n      ", wxString: nil, skyCondition: Metar.DummySkyConditions, flightCategory: "VFR", threeHrPressureTendencyMb: nil, maxTempPastSixHoursC: 0, minTempPastSixHoursC: 0, maxTemp24HrC: 0, minTemp24HrC: 0, precipIn: 0, precipLast3HoursIn: 0, precipLast6HoursIn: 0, precipLast24HoursIn: 0, snowIn: 0, vertVisFt: 0, metarType: nil, elevationM: 0)
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(stationId)
-    }
-    
     public var id = UUID()
     public var rawText: String?
     public var stationId: String?
@@ -72,7 +70,7 @@ public struct Metar: Hashable ,Loopable {
     public var seaLevelPressureMb: Double?
     public var qualityControlFlags: String?
     public var wxString: String?
-    public var skyCondition: [SkyCondition]
+    public var skyCondition: [SkyCondition?]?
     public var flightCategory: String?
     public var threeHrPressureTendencyMb: String?
     public var maxTempPastSixHoursC: Double?
@@ -87,5 +85,4 @@ public struct Metar: Hashable ,Loopable {
     public var vertVisFt: Double?
     public var metarType: String?
     public var elevationM: Double?
-    
 }
