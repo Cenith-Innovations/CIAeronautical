@@ -82,7 +82,7 @@ public class NotamParser {
     
     private func fillInRawNotams() {
         let dataIndexes = htmlData.ranges(of: "<PRE>")
-//        print("Notams found: \(dataIndexes.count)")
+        print("Notams found: \(dataIndexes.count)")
         var count = 0
         for index in dataIndexes {
             let substring = htmlData[index.upperBound...]
@@ -121,4 +121,3 @@ public class NotamParser {
         }
     }
 }
-
