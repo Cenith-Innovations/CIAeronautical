@@ -1,6 +1,6 @@
 // ********************** File *********************************
 // * Copyright © Cenith Innovations, LLC - All Rights Reserved
-// * Created on 1/22/21, for 
+// * Created on 1/22/21, for
 // * Matthew Elmore <matt@cenithinnovations.com>
 // * Unauthorized copying of this file is strictly prohibited
 // ********************** File *********************************
@@ -11,7 +11,6 @@ import Combine
 import CoreLocation
 
 /// Interface to go get all the pretty airplanes. Full description see - [OpenSky REST API](https://opensky-network.org/apidoc/rest.html)
-@available(tvOS 13.0, *)
 public class OpenSkyAPI: ObservableObject {
     
     /// A shared instance of the OpenSkyAPI, used to link the @Published store so your user-interface will automatically update when this updates with new ADS-B info.
@@ -56,19 +55,15 @@ public class OpenSkyAPI: ObservableObject {
                 
                 currentTraffic.append(result)
                 foreFlightFormatTraffic.append(ForeFlightTraffic(traffic: result).foreFlightTrafficString)
-            }} catch {
+            }
+        } catch {
                 print("No Soup for YOU!")
         }
+        
         DispatchQueue.main.async {
             self.store.send(currentTraffic)
             self.foreFlightTraffic.send(foreFlightFormatTraffic)
             self.aircraft = currentTraffic
         }
-        
     }
-    
-    
-    
-    
 }
-
