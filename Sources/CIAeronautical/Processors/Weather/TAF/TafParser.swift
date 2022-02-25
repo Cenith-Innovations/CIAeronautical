@@ -10,16 +10,23 @@ import Foundation
 
 /// Parses the TAF and decodes the TAF
 public class TafParser: NSObject, XMLParserDelegate {
-    private let taf                 = TafField.tafMain.rawValue
-    private let tafKeys             = TafField.allCases.map { $0.rawValue }
-    private let forecastKeys        = ForecastField.allCases.map { $0.rawValue }
-    private let skyConditionKeys    = SkyConditionField.allCases.map { $0.rawValue }
-    private let turbulanceKeys      = TurbulanceConditionField.allCases.map { $0.rawValue }
-    private let icingKeys           = IcingConditionField.allCases.map { $0.rawValue }
+    private let taf = TafField.tafMain.rawValue
+    private let tafKeys = TafField.allCases.map { $0.rawValue }
+    private let forecastKeys = ForecastField.allCases.map { $0.rawValue }
+    private let skyConditionKeys = SkyConditionField.allCases.map { $0.rawValue }
+    private let turbulanceKeys = TurbulanceConditionField.allCases.map { $0.rawValue }
+    private let icingKeys = IcingConditionField.allCases.map { $0.rawValue }
     private var results: [[String: String]]?
     private var currentTaf: [String: String]?
     private var currentValue: String?
     var tafs: [Taf] = []
+    
+    private var forecast: Forecast?
+    private var currentForecast: [String: String]?
+    private var forecasts: [Forecast] = []
+    private var skyConditions: [SkyCondition] = []
+    private var turbulanceConditions: [TurbulanceCondition] = []
+    private var icingConditions: [IcingCondition] = []
     
     convenience init(data: Data) {
         self.init()
@@ -32,12 +39,6 @@ public class TafParser: NSObject, XMLParserDelegate {
         results = []
     }
     
-    private var forecast: Forecast?
-    private var currentForecast: [String: String]?
-    private var forecasts: [Forecast] = []
-    private var skyConditions: [SkyCondition] = []
-    private var turbulanceConditions: [TurbulanceCondition] = []
-    private var icingConditions: [IcingCondition] = []
     public func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
         if elementName == taf {
             currentTaf = [:]
@@ -47,14 +48,10 @@ public class TafParser: NSObject, XMLParserDelegate {
             turbulanceConditions = []
             icingConditions = []
         } else if tafKeys.contains(elementName) {
-            
-        } else if forecastKeys.contains(elementName) {
             if elementName == ForecastField.forecast.rawValue {
                 forecast = Forecast()
             }
-        }
-        
-        else if elementName == skyConditionField(.skyCondition) {
+        } else if elementName == skyConditionField(.skyCondition) {
             skyConditions.append(SkyCondition(skyCover: attributeDict[skyConditionField(.skyCover)],
                                               cloudBaseFtAgl: attributeDict[skyConditionField(.cloudBaseFtAGL)].toDouble,
                                               cloudType: attributeDict[skyConditionField(.cloudType)]))
@@ -74,7 +71,6 @@ public class TafParser: NSObject, XMLParserDelegate {
     public func parser(_ parser: XMLParser, foundCharacters string: String) {
         currentValue? += string
     }
-    
     
     public func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         switch elementName {
@@ -102,7 +98,9 @@ public class TafParser: NSObject, XMLParserDelegate {
             for taf in resultTafs {
                 let wx = Taf(rawText: taf[tafField(.rawText)], stationId: taf[tafField(.stationId)], issueTime: taf[tafField(.issueTime)].metarTafStringToDate, bulletinTime: taf[tafField(.bulletinTime)].metarTafStringToDate, validTimeFrom: taf[tafField(.validTimeFrom)].metarTafStringToDate, validTimeTo: taf[tafField(.validTimeTo)].metarTafStringToDate, remarks: taf[tafField(.remarks)], latitude: taf[tafField(.latitude)].toDouble, longitude: taf[tafField(.longitude)].toDouble, elevationM: taf[tafField(.elevationM)].toDouble, forecast: forecasts, temperature: taf[tafField(.temperature)].toDouble, validTime: taf[tafField(.validTime)].metarTafStringToDate, surfaceTempC: taf[tafField(.surfcaeTempC)].toDouble, maxTempC: taf[tafField(.maxTempC)].toDouble, minTempC: taf[tafField(.minTempC)].toDouble)
                 tafs.append(wx)
-            }}}
+            }
+        }
+    }
     
     fileprivate func tafField(_ f: TafField) -> String {
         return f.rawValue
@@ -131,5 +129,3 @@ public class TafParser: NSObject, XMLParserDelegate {
         results = nil
     }
 }
-
-

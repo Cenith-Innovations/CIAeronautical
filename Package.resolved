@@ -3,7 +3,7 @@
     "pins": [
       {
         "package": "CIFoundation",
-        "repositoryURL": "https://github.com/Cenith-Innovations/CIFoundation",
+        "repositoryURL": "https://github.com/Cenith-Innovations/CIFoundation.git",
         "state": {
           "branch": null,
           "revision": "07cc4a1d1ceb32b56684d2b0cea560f7efb650cd",
