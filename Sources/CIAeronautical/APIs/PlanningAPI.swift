@@ -33,7 +33,7 @@ public class PlanningAPI: ObservableObject {
     
     // MARK: - 🔅 Publishers: METARs
     /// Publisher that contains the METAR for the input ICAO.
-    @Published public var metar = Metar()
+    @Published public var metar: Metar?// = Metar()
 
     /// Temp Holder for metars to get rid of duplicates. The intended public Publisher is the Array of Metars
 //    @Published private var metarSet: Set<Metar> = []
@@ -52,7 +52,7 @@ public class PlanningAPI: ObservableObject {
     /// Clears all of the publishers.
     public func clearAll() {
         notams = [:]
-        metar = Metar()
+        metar = nil //Metar()
         tafs = []
     }
     
