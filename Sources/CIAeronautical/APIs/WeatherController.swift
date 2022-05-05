@@ -51,7 +51,7 @@ public class WeatherController: ObservableObject {
     
     // MARK: METAR
     
-    private func getAllMetars(icaos: [String]) {
+    public func getAllMetars(icaos: [String]) {
         
         let airfieldsString = icaos.joined(separator: ",")
         
@@ -83,7 +83,7 @@ public class WeatherController: ObservableObject {
     
     // MARK: TAF
     
-    private func getAllTafs(icaos: [String]) {
+    public func getAllTafs(icaos: [String]) {
         let airfieldsString = icaos.joined(separator: ",")
         let times = Date.getDateForTaf(nowPlusHours: 8)
         let df = DateFormatter()
@@ -120,7 +120,7 @@ public class WeatherController: ObservableObject {
     
     /// Retrieves the notams for the corresponding array of icao.
     /// - Parameter icaos: an array of desired icao.
-    private func getAllNotams(icaos: [String]) {
+    public func getAllNotams(icaos: [String]) {
         let stations = icaos.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         let url = URL(string: "https://www.notams.faa.gov/dinsQueryWeb/queryRetrievalMapAction.do")!
         var request = URLRequest(url: url)
