@@ -29,4 +29,13 @@ public extension Date {
         return (month: month, day: day, hourZ: hourZ)
     }
     
+    /// Returns a String of passed of Date's hour in Zulu / UTC
+    /// - Parameters:
+    ///   - date: Date we pass in to get back its hour component in Zulu / UTC
+    static func getCurrHourZulu(date: Date) -> String {
+        var cal = Calendar.current
+        cal.timeZone = TimeZone(abbreviation: "UTC")!
+        let hourZ = String(cal.component(.hour, from: date))
+        return hourZ
+    }
 }

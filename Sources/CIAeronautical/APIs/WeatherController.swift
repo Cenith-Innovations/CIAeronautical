@@ -35,6 +35,13 @@ public class WeatherController: ObservableObject {
     /// Publisher that contains the BirdConditions for the input area.
     @Published public var ahas: [Ahas] = []
     
+    
+    // DragonBoard
+    /// Date when all ahas were last fetched
+    @Published public var ahasFetchedDate: Date?
+    /// Publisher that contains AHAS for each icao
+    @Published public var ahasDict: [String: Ahas?] = [:]
+    
     /// Clears all of the publishers.
     public func clearAll() {
         notams = [:]
@@ -184,6 +191,45 @@ public class WeatherController: ObservableObject {
                 }
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")
+            } else {
+                print("Unexpected error with request")
+            }}
+        task.resume()
+    }
+    
+    public func getAllAhasChained(icaos: [String]) {
+        
+        // reset dict first
+        ahasDict = [:]
+        
+        // set new date
+        ahasFetchedDate = Date()
+        
+        for icao in icaos {
+            print("fetching Ahas for \(icao)...")
+            getAhasFor(icao: icao)
+        }
+    }
+    
+    /// Adds fetched Ahas into ahasDict
+    private func getAhasFor(icao: String) {
+        
+        let area = AHASInputs.hiddenInputs[icao] ?? ""
+        let url = AhasWebAPI.AhasURL(area: area, month: Date.getAhasDateComponents().month,
+                                     day: Date.getAhasDateComponents().day,
+                                     hour: Date.getAhasDateComponents().hourZ,
+                                     parameters: nil)
+        
+        let request = URLRequest(url: url)
+        let session = URLSession(configuration: .ephemeral)
+        let task = session.dataTask(with: request) { (data, response, error) -> Void in
+            if let XMLData = data {
+                let birdCondition = AhasParser(data: XMLData).ahas
+                DispatchQueue.main.async {
+                    self.ahasDict[icao] = birdCondition.first
+                }
+            } else if let requestError = error {
+                print("Error fetching ahas: \(requestError)")
             } else {
                 print("Unexpected error with request")
             }}
