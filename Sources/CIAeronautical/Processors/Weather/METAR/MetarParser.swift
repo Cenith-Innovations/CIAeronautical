@@ -48,9 +48,16 @@ public class MetarParser: NSObject, ObservableObject, XMLParserDelegate {
     }
     
     var skyConditions: [SkyCondition?] = []
+    var skyConditionsDict: [String: [SkyCondition?]] = [:]
     public func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         if elementName == metar {
             results!.append(currentMetar!)
+            
+            // package up skyConditions for metar that ended into a dictionary we'll use at the end
+            if let stationId = currentMetar!["station_id"] {
+                skyConditionsDict[stationId] = skyConditions
+            }
+            
             currentMetar = nil
         } else if metarKeys.contains(elementName) {
             currentMetar?[elementName] = currentValue
@@ -76,7 +83,7 @@ public class MetarParser: NSObject, ObservableObject, XMLParserDelegate {
                                seaLevelPressureMb: metar[MetarField.seaLevelPressureMb.rawValue].toDouble ?? 0,
                                qualityControlFlags: metar[MetarField.qualityControlFlags.rawValue] ?? "",
                                wxString: metar[MetarField.wxString.rawValue] ?? "",
-                               skyCondition: skyConditions,
+                               skyCondition: skyConditionsDict[metar[MetarField.stationId.rawValue] ?? ""] ?? [],
                                flightCategory: metar[MetarField.flightCategory.rawValue] ?? "",
                                threeHrPressureTendencyMb: metar[MetarField.threeHrPressureTendencyMb.rawValue] ?? "",
                                maxTempPastSixHoursC: metar[MetarField.maxTempPastSixHoursC.rawValue].toDouble ?? 0,
