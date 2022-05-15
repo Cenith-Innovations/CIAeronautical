@@ -87,9 +87,28 @@ public class TafParser: NSObject, XMLParserDelegate {
             
             currentTaf = nil
         case _ where elementName == ForecastField.forecast.rawValue:
-            forecast = Forecast(forecastTimeFrom: currentForecast?[forecastField(.forecastTimeFrom)].metarTafStringToDate, forecastTimeTo: currentForecast?[forecastField(.forecastTimeTo)].metarTafStringToDate, changeIndicator: currentForecast?[forecastField(.changeIndicator)], timeBecoming: currentForecast?[forecastField(.timeBecoming)].metarTafStringToDate, probability: currentForecast?[forecastField(.probability)].toInt, windDirDegrees: currentForecast?[forecastField(.windDirDegrees)].toDouble, windSpeedKts: currentForecast?[forecastField(.windSpeedKts)].toDouble, windGustKts: currentForecast?[forecastField(.windGustKts)].toDouble, windShearHeightFtAGL: currentForecast?[forecastField(.windShearHeightAboveGroundFt)].toInt, windShearDirDegrees: currentForecast?[forecastField(.windShearDirDegrees)].toDouble, windShearSpeedKts: currentForecast?[forecastField(.windShearSpeedKts)].toDouble, visibilityStatuteMiles: currentForecast?[forecastField(.visibilityStatuteMiles)].toDouble, altimeterInHg: currentForecast?[forecastField(.altimeterInHg)].toDouble, verticleVisFt: currentForecast?[forecastField(.vertVisFt)].toDouble, wxString: currentForecast?[forecastField(.weatherString)], notDecoded: currentForecast?[forecastField(.notDecoded)], skyConditions: skyConditions, turbulenceCondition: turbulanceConditions, icingConditions: icingConditions)
+                        
+            forecast = Forecast(forecastTimeFrom: currentForecast?[forecastField(.forecastTimeFrom)].metarTafStringToDate, forecastTimeTo: currentForecast?[forecastField(.forecastTimeTo)].metarTafStringToDate,
+                                changeIndicator: currentForecast?[forecastField(.changeIndicator)],
+                                timeBecoming: currentForecast?[forecastField(.timeBecoming)].metarTafStringToDate,
+                                probability: currentForecast?[forecastField(.probability)].toInt,
+                                windDirDegrees: currentForecast?[forecastField(.windDirDegrees)].toDouble,
+                                windSpeedKts: currentForecast?[forecastField(.windSpeedKts)].toDouble,
+                                windGustKts: currentForecast?[forecastField(.windGustKts)].toDouble,
+                                windShearHeightFtAGL: currentForecast?[forecastField(.windShearHeightAboveGroundFt)].toInt,
+                                windShearDirDegrees: currentForecast?[forecastField(.windShearDirDegrees)].toDouble,
+                                windShearSpeedKts: currentForecast?[forecastField(.windShearSpeedKts)].toDouble,
+                                visibilityStatuteMiles: currentForecast?[forecastField(.visibilityStatuteMiles)].toDouble,
+                                altimeterInHg: currentForecast?[forecastField(.altimeterInHg)].toDouble,
+                                verticleVisFt: currentForecast?[forecastField(.vertVisFt)].toDouble,
+                                wxString: currentForecast?[forecastField(.weatherString)],
+                                notDecoded: currentForecast?[forecastField(.notDecoded)],
+                                skyConditions: skyConditions,
+                                turbulenceCondition: turbulanceConditions,
+                                icingConditions: icingConditions)
             forecasts.append(forecast!)
             forecast = nil
+            skyConditions = []
         case _ where tafKeys.contains(elementName):
             currentTaf![elementName] = currentValue
             currentValue = nil
