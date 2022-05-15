@@ -28,6 +28,9 @@ public class TafParser: NSObject, XMLParserDelegate {
     private var turbulanceConditions: [TurbulanceCondition] = []
     private var icingConditions: [IcingCondition] = []
     
+    // Now Forecasts come in when receiving multiple TAFs
+    private var forecastsDict = [String: [Forecast]]()
+    
     convenience init(data: Data) {
         self.init()
         let parser = XMLParser(data: data)
@@ -76,6 +79,12 @@ public class TafParser: NSObject, XMLParserDelegate {
         switch elementName {
         case _ where elementName == taf:
             results!.append(currentTaf!)
+            
+            // package up Forecasts to match with this taf later
+            if let stationId = currentTaf!["station_id"] {
+                forecastsDict[stationId] = forecasts
+            }
+            
             currentTaf = nil
         case _ where elementName == ForecastField.forecast.rawValue:
             forecast = Forecast(forecastTimeFrom: currentForecast?[forecastField(.forecastTimeFrom)].metarTafStringToDate, forecastTimeTo: currentForecast?[forecastField(.forecastTimeTo)].metarTafStringToDate, changeIndicator: currentForecast?[forecastField(.changeIndicator)], timeBecoming: currentForecast?[forecastField(.timeBecoming)].metarTafStringToDate, probability: currentForecast?[forecastField(.probability)].toInt, windDirDegrees: currentForecast?[forecastField(.windDirDegrees)].toDouble, windSpeedKts: currentForecast?[forecastField(.windSpeedKts)].toDouble, windGustKts: currentForecast?[forecastField(.windGustKts)].toDouble, windShearHeightFtAGL: currentForecast?[forecastField(.windShearHeightAboveGroundFt)].toInt, windShearDirDegrees: currentForecast?[forecastField(.windShearDirDegrees)].toDouble, windShearSpeedKts: currentForecast?[forecastField(.windShearSpeedKts)].toDouble, visibilityStatuteMiles: currentForecast?[forecastField(.visibilityStatuteMiles)].toDouble, altimeterInHg: currentForecast?[forecastField(.altimeterInHg)].toDouble, verticleVisFt: currentForecast?[forecastField(.vertVisFt)].toDouble, wxString: currentForecast?[forecastField(.weatherString)], notDecoded: currentForecast?[forecastField(.notDecoded)], skyConditions: skyConditions, turbulenceCondition: turbulanceConditions, icingConditions: icingConditions)
@@ -96,7 +105,22 @@ public class TafParser: NSObject, XMLParserDelegate {
     public func parserDidEndDocument(_ parser: XMLParser) {
         if let resultTafs = results {
             for taf in resultTafs {
-                let wx = Taf(rawText: taf[tafField(.rawText)], stationId: taf[tafField(.stationId)], issueTime: taf[tafField(.issueTime)].metarTafStringToDate, bulletinTime: taf[tafField(.bulletinTime)].metarTafStringToDate, validTimeFrom: taf[tafField(.validTimeFrom)].metarTafStringToDate, validTimeTo: taf[tafField(.validTimeTo)].metarTafStringToDate, remarks: taf[tafField(.remarks)], latitude: taf[tafField(.latitude)].toDouble, longitude: taf[tafField(.longitude)].toDouble, elevationM: taf[tafField(.elevationM)].toDouble, forecast: forecasts, temperature: taf[tafField(.temperature)].toDouble, validTime: taf[tafField(.validTime)].metarTafStringToDate, surfaceTempC: taf[tafField(.surfcaeTempC)].toDouble, maxTempC: taf[tafField(.maxTempC)].toDouble, minTempC: taf[tafField(.minTempC)].toDouble)
+                let wx = Taf(rawText: taf[tafField(.rawText)],
+                             stationId: taf[tafField(.stationId)],
+                             issueTime: taf[tafField(.issueTime)].metarTafStringToDate,
+                             bulletinTime: taf[tafField(.bulletinTime)].metarTafStringToDate,
+                             validTimeFrom: taf[tafField(.validTimeFrom)].metarTafStringToDate,
+                             validTimeTo: taf[tafField(.validTimeTo)].metarTafStringToDate,
+                             remarks: taf[tafField(.remarks)],
+                             latitude: taf[tafField(.latitude)].toDouble,
+                             longitude: taf[tafField(.longitude)].toDouble,
+                             elevationM: taf[tafField(.elevationM)].toDouble,
+                             forecast: forecastsDict[taf[tafField(.stationId)] ?? ""],
+                             temperature: taf[tafField(.temperature)].toDouble,
+                             validTime: taf[tafField(.validTime)].metarTafStringToDate,
+                             surfaceTempC: taf[tafField(.surfcaeTempC)].toDouble,
+                             maxTempC: taf[tafField(.maxTempC)].toDouble,
+                             minTempC: taf[tafField(.minTempC)].toDouble)
                 tafs.append(wx)
             }
         }
