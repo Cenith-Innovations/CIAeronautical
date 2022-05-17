@@ -74,7 +74,7 @@ public enum ForecastField: String, CaseIterable {
     case probability = "probability"
     case windDirDegrees = "wind_dir_degrees"
     case windSpeedKts = "wind_speed_kt"
-    case windGustKts = "wing_gust_kt"
+    case windGustKts = "wind_gust_kt"
     case windShearHeightAboveGroundFt = "wind_shear_hgt_ft_agl"
     case windShearDirDegrees = "wind_shear_dir_degrees"
     case windShearSpeedKts = "wind_shear_speed_kt"
