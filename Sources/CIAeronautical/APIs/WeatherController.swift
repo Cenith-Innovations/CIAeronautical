@@ -62,7 +62,6 @@ public class WeatherController: ObservableObject {
         
         let airfieldsString = icaos.joined(separator: ",")
         
-        // TODO: create URL same way PlanningAPI does it?
         let url = URL(string: "https://www.aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=2&mostRecentForEachStation=true&stationString=\(airfieldsString)")!
         
         let request = URLRequest(url: url)
@@ -136,6 +135,12 @@ public class WeatherController: ObservableObject {
         let stationData = (stations.reduce("") {$0 + " " + $1 }).trimmingCharacters(in: .whitespacesAndNewlines)
         let postData = "Report=Report&actionType=notamRetrievalByICAOs&retrieveLocId=\(stationData)"
         request.httpBody = postData.data(using: .utf8)
+        
+        if let XMLString = String(data: postData.data(using: .utf8)!, encoding: String.Encoding.utf8)
+        {
+            print("notams post body XML = \(XMLString)")
+        }
+        
         let session = URLSession(configuration: .ephemeral)
         let task = session.dataTask(with: request) { (data, response, error) in
             guard let data = data, error == nil else {
@@ -147,6 +152,13 @@ public class WeatherController: ObservableObject {
                 return
             }
             let responseString = String(decoding: data, as: UTF8.self)
+            print("notams responseString = \(responseString)")
+            
+            if let JSONString = String(data: data, encoding: String.Encoding.utf8)
+            {
+                print("notams response xml = \(JSONString)")
+            }
+            
             let currentNotams = NotamParser(htmlData: responseString).notams
             DispatchQueue.main.async {
                 //Object Oriented

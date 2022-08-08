@@ -34,9 +34,6 @@ public class PlanningAPI: ObservableObject {
     // MARK: - 🔅 Publishers: METARs
     /// Publisher that contains the METAR for the input ICAO.
     @Published public var metar: Metar?// = Metar()
-
-    /// Temp Holder for metars to get rid of duplicates. The intended public Publisher is the Array of Metars
-//    @Published private var metarSet: Set<Metar> = []
     
     /// Publisher that holds Metars corresponding to AirfieldIcaos
     @Published public var metars: [Metar] = []
