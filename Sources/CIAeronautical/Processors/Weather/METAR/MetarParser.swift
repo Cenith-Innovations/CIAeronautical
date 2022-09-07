@@ -70,7 +70,7 @@ public class MetarParser: NSObject, ObservableObject, XMLParserDelegate {
             for metar in resultMetars {
                 let wx = Metar(rawText: metar[MetarField.rawText.rawValue] ?? "",
                                stationId: metar[MetarField.stationId.rawValue] ?? "",
-                               observationTime: metar[MetarField.observationTime.rawValue].metarTafStringToDate ?? Date(),
+                               observationTime: metar[MetarField.observationTime.rawValue].weatherStringToDate,
                                latitude: metar[MetarField.latitude.rawValue].toDouble ?? 0,
                                longitude: metar[MetarField.longitude.rawValue].toDouble ?? 0,
                                tempC: metar[MetarField.tempC.rawValue].toDouble ?? 0,

@@ -42,6 +42,14 @@ public class WeatherController: ObservableObject {
     /// Publisher that contains AHAS for each icao
     @Published public var ahasDict: [String: Ahas?] = [:]
     
+    init() {
+        print("WeatherController init")
+    }
+    
+    deinit {
+        print("WeatherController deinit")
+    }
+    
     /// Clears all of the publishers.
     public func clearAll() {
         notams = [:]
@@ -65,7 +73,7 @@ public class WeatherController: ObservableObject {
         let url = URL(string: "https://www.aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=2&mostRecentForEachStation=true&stationString=\(airfieldsString)")!
         
         let request = URLRequest(url: url)
-        let task = URLSession.shared.dataTask(with: request) { (data, _, error) in
+        let task = URLSession.shared.dataTask(with: request) { [weak self] (data, _, error) in
             if let xmlData = data {
                 let currentMetars = MetarParser(data: xmlData).metars
                 var tempMetarsDict = [String: Metar]()
@@ -75,8 +83,8 @@ public class WeatherController: ObservableObject {
                 }
                 
                 DispatchQueue.main.async {
-                    self.metars = tempMetarsDict
-                    self.metarsLastFetchedDate = Date()
+                    self?.metars = tempMetarsDict
+                    self?.metarsLastFetchedDate = Date()
                 }
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")
@@ -99,7 +107,7 @@ public class WeatherController: ObservableObject {
         let url = URL(string: "https://www.aviationweather.gov/adds/dataserver_current/httpparam?dataSource=tafs&format=xml&endTime=\(end)&startTime=\(start)&requestType=retrieve&mostRecentForEachStation=true&stationString=\(airfieldsString)")!
         print("\(#function) url: \(url)")
         let request = URLRequest(url: url)
-        let task = URLSession.shared.dataTask(with: request) { (data, _, error) in
+        let task = URLSession.shared.dataTask(with: request) { [weak self] (data, _, error) in
             if let xmlData = data {
                 let currentTafs = TafParser(data: xmlData).tafs
                 var tempTafsDict = [String: Taf]()
@@ -110,8 +118,8 @@ public class WeatherController: ObservableObject {
                 }
     
                 DispatchQueue.main.async {
-                    self.tafs = tempTafsDict
-                    self.tafsLastFetchedDate = Date()
+                    self?.tafs = tempTafsDict
+                    self?.tafsLastFetchedDate = Date()
                 }
             } else if let requestError = error {
                 print("Error fetching tafs: \(requestError)")
@@ -142,7 +150,7 @@ public class WeatherController: ObservableObject {
         }
         
         let session = URLSession(configuration: .ephemeral)
-        let task = session.dataTask(with: request) { (data, response, error) in
+        let task = session.dataTask(with: request) { [weak self] (data, response, error) in
             guard let data = data, error == nil else {
                 print("Data not found, error encountered: \(error!)")
                 return
@@ -170,8 +178,8 @@ public class WeatherController: ObservableObject {
                     }
                     tempNotams[icao] = notams
                 }
-                self.notams = tempNotams
-                self.notamsLastFetchedDate = Date()
+                self?.notams = tempNotams
+                self?.notamsLastFetchedDate = Date()
             }
         }
         task.resume()
@@ -195,11 +203,11 @@ public class WeatherController: ObservableObject {
         let url = AhasWebAPI.AhasURL(area: area, month: month, day: day, hour: hourZ, parameters: nil)
         let request = URLRequest(url: url)
         let session = URLSession(configuration: .ephemeral)
-        let task = session.dataTask(with: request) { (data, response, error) -> Void in
+        let task = session.dataTask(with: request) { [weak self] (data, response, error) -> Void in
             if let XMLData = data {
                 let birdCondition = AhasParser(data: XMLData).ahas
                 DispatchQueue.main.async {
-                    self.ahas = birdCondition
+                    self?.ahas = birdCondition
                 }
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")
@@ -234,11 +242,11 @@ public class WeatherController: ObservableObject {
         
         let request = URLRequest(url: url)
         let session = URLSession(configuration: .ephemeral)
-        let task = session.dataTask(with: request) { (data, response, error) -> Void in
+        let task = session.dataTask(with: request) { [weak self] (data, response, error) -> Void in
             if let XMLData = data {
                 let birdCondition = AhasParser(data: XMLData).ahas
                 DispatchQueue.main.async {
-                    self.ahasDict[icao] = birdCondition.first
+                    self?.ahasDict[icao] = birdCondition.first
                 }
             } else if let requestError = error {
                 print("Error fetching ahas: \(requestError)")

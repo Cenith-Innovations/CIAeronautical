@@ -75,6 +75,13 @@ public class TafParser: NSObject, XMLParserDelegate {
         currentValue? += string
     }
     
+    public func forecastStringToDate(str: String) -> Date? {
+        let df = DateFormatter()
+        df.timeZone = TimeZone(abbreviation: "UTC")!
+        df.dateFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'"
+        return df.date(from: str)
+    }
+    
     public func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         switch elementName {
         case _ where elementName == taf:
@@ -88,9 +95,10 @@ public class TafParser: NSObject, XMLParserDelegate {
             currentTaf = nil
         case _ where elementName == ForecastField.forecast.rawValue:
                         
-            forecast = Forecast(forecastTimeFrom: currentForecast?[forecastField(.forecastTimeFrom)].metarTafStringToDate, forecastTimeTo: currentForecast?[forecastField(.forecastTimeTo)].metarTafStringToDate,
+            forecast = Forecast(forecastTimeFrom: currentForecast?[forecastField(.forecastTimeFrom)].weatherStringToDate,
+                                forecastTimeTo: currentForecast?[forecastField(.forecastTimeTo)].weatherStringToDate,
                                 changeIndicator: currentForecast?[forecastField(.changeIndicator)],
-                                timeBecoming: currentForecast?[forecastField(.timeBecoming)].metarTafStringToDate,
+                                timeBecoming: currentForecast?[forecastField(.timeBecoming)].weatherStringToDate,
                                 probability: currentForecast?[forecastField(.probability)].toInt,
                                 windDirDegrees: currentForecast?[forecastField(.windDirDegrees)].toDouble,
                                 windSpeedKts: currentForecast?[forecastField(.windSpeedKts)].toDouble,
@@ -126,17 +134,17 @@ public class TafParser: NSObject, XMLParserDelegate {
             for taf in resultTafs {
                 let wx = Taf(rawText: taf[tafField(.rawText)],
                              stationId: taf[tafField(.stationId)],
-                             issueTime: taf[tafField(.issueTime)].metarTafStringToDate,
-                             bulletinTime: taf[tafField(.bulletinTime)].metarTafStringToDate,
-                             validTimeFrom: taf[tafField(.validTimeFrom)].metarTafStringToDate,
-                             validTimeTo: taf[tafField(.validTimeTo)].metarTafStringToDate,
+                             issueTime: taf[tafField(.issueTime)].weatherStringToDate,
+                             bulletinTime: taf[tafField(.bulletinTime)].weatherStringToDate,
+                             validTimeFrom: taf[tafField(.validTimeFrom)].weatherStringToDate,
+                             validTimeTo: taf[tafField(.validTimeTo)].weatherStringToDate,
                              remarks: taf[tafField(.remarks)],
                              latitude: taf[tafField(.latitude)].toDouble,
                              longitude: taf[tafField(.longitude)].toDouble,
                              elevationM: taf[tafField(.elevationM)].toDouble,
                              forecast: forecastsDict[taf[tafField(.stationId)] ?? ""],
                              temperature: taf[tafField(.temperature)].toDouble,
-                             validTime: taf[tafField(.validTime)].metarTafStringToDate,
+                             validTime: taf[tafField(.validTime)].weatherStringToDate,
                              surfaceTempC: taf[tafField(.surfcaeTempC)].toDouble,
                              maxTempC: taf[tafField(.maxTempC)].toDouble,
                              minTempC: taf[tafField(.minTempC)].toDouble)

@@ -35,4 +35,10 @@ public extension Optional where Wrapped == String {
         }
         return nil
     }
+    
+    /// Returns a Date in UTC
+    var weatherStringToDate: Date? {
+        guard let str = self else { return nil }
+        return DateFormatter.weatherDateFormatter.date(from: str)
+    }
 }
