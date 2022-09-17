@@ -42,6 +42,7 @@ public class WeatherController: ObservableObject {
     /// Publisher that contains AHAS for each icao
     @Published public var ahasDict: [String: Ahas?] = [:]
         
+    /// API key passed in when initializing. Eventually will be stored in our own server
     let airNowAPIKey: String
     
     public init(key: String) {
