@@ -15,9 +15,6 @@ import Combine
 
 public class WeatherController: ObservableObject {
     
-    required public init(airfieldIcaos: [String] = []) {
-        self.airfieldIcaos = airfieldIcaos
-    }
     /// Set this when instantiating the Planning API if you want to pull info accross multiple Processors for the ICAOs in here.
     @Published public var airfieldIcaos: [String] = []
 
@@ -35,19 +32,61 @@ public class WeatherController: ObservableObject {
     /// Publisher that contains the BirdConditions for the input area.
     @Published public var ahas: [Ahas] = []
     
+    /// Publisher that contains the AQIs for the input ICAO
+    @Published public var airQualities: [String: [AirQuality]] = [:]
+    @Published public var isFetchingAirQuality = false
     
     // DragonBoard
     /// Date when all ahas were last fetched
     @Published public var ahasFetchedDate: Date?
     /// Publisher that contains AHAS for each icao
     @Published public var ahasDict: [String: Ahas?] = [:]
+        
+    let airNowAPIKey: String
     
-    init() {
+    public init(key: String) {
         print("WeatherController init")
+        airNowAPIKey = key
     }
     
     deinit {
         print("WeatherController deinit")
+    }
+    
+    // MARK: - AQI (Air Quality Index)
+    
+    // TODO: add better error handling
+    public func getAirQuality(icao: String, lat: Double, lon: Double) {
+        
+        // TODO: put api key in untracked file?
+        
+        // return early if he already fetched airQuality for current hour and its been less than 1 hour since we last fetched it
+        if let aqs = airQualities[icao], let highestAq = AirQuality.highestAqi(aqs: aqs), !highestAq.observationNeedsRefresh {
+            print("selected aq doesn't need refresh")
+            return
+        }
+        
+        let url = URL(string: "https://www.airnowapi.org/aq/observation/latLong/current/?format=application/json&latitude=\(lat)&longitude=\(lon)&API_KEY=\(airNowAPIKey)")!
+        
+        isFetchingAirQuality = true
+        let request = URLRequest(url: url)
+        let task = URLSession.shared.dataTask(with: request) { [weak self] (data, _, error) in
+            
+            DispatchQueue.main.async {
+                if let data = data {
+                    do {
+                        let airQualityArray = try JSONDecoder().decode([AirQuality].self, from: data)
+                        self?.airQualities[icao] = airQualityArray.sorted(by: { $0.aqi ?? 0 > $1.aqi ?? 0 } )
+                    } catch {
+                        print("error decoding aq")
+                    }
+                } else {
+                    print("Error getting AQ")
+                }
+                self?.isFetchingAirQuality = false
+            }
+        }
+        task.resume()
     }
     
     /// Clears all of the publishers.
@@ -55,6 +94,7 @@ public class WeatherController: ObservableObject {
         notams = [:]
         metars = [:]
         tafs = [:]
+        // TODO: clear ahas and airQualities?
     }
     
     /// Retrieves METARs, TAFs, and NOTAMS for passed in array of icaos
@@ -235,7 +275,8 @@ public class WeatherController: ObservableObject {
     private func getAhasFor(icao: String) {
         
         let area = AHASInputs.hiddenInputs[icao] ?? ""
-        let url = AhasWebAPI.AhasURL(area: area, month: Date.getAhasDateComponents().month,
+        let url = AhasWebAPI.AhasURL(area: area,
+                                     month: Date.getAhasDateComponents().month,
                                      day: Date.getAhasDateComponents().day,
                                      hour: Date.getAhasDateComponents().hourZ,
                                      parameters: nil)
