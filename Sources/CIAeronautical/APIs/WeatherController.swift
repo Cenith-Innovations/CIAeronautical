@@ -32,10 +32,14 @@ public class WeatherController: ObservableObject {
     /// Publisher that contains the BirdConditions for the input area.
     @Published public var ahas: [Ahas] = []
     
-    /// Publisher that contains the AQIs for the input ICAO
+    /// Publisher that contains the AQIs (current observations) for the input ICAO. Current observations only need to be fetched once an hour
     @Published public var airQualities: [String: [AirQuality]] = [:]
     @Published public var isFetchingAirQuality = false
     
+    /// Publisher that contains the AQIs Forecasts for the input ICAO. Forecasts only need to be fetched once a day
+    @Published public var airForecasts: [String: [AirQuality]] = [:]
+    @Published public var isFetchingAirForecast = false
+        
     // DragonBoard
     /// Date when all ahas were last fetched
     @Published public var ahasFetchedDate: Date?
@@ -56,8 +60,48 @@ public class WeatherController: ObservableObject {
     
     // MARK: - AQI (Air Quality Index)
     
+    public func getAirQualityForecast(icao: String, lat: Double, long: Double) {
+        
+        let currentDateComps = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        var currentDayString: String?
+        if let year = currentDateComps.year, let month = currentDateComps.month, let day = currentDateComps.day {
+            let monthString = month < 10 ? "0\(month)" : "\(month)"
+            let dayString = day < 10 ? "0\(day)" : "\(day)"
+            currentDayString = "\(year)-\(monthString)-\(dayString)"
+        }
+        
+        // check the EARLIEST forecast in results? (should be first one in array)
+        if let date = currentDayString, let forecastString = airForecasts[icao]?.first?.dateForecast?.trimmingCharacters(in: .whitespaces), date != forecastString {
+            print("current date and forecast date match")
+            return
+        }
+        guard let date = currentDayString else { return }
+        
+        let url = URL(string: "https://www.airnowapi.org/aq/forecast/latLong/?format=application/json&latitude=\(lat)&longitude=\(long)&date=\(date)&API_KEY=\(airNowAPIKey)")!
+        
+        isFetchingAirForecast = true
+        let request = URLRequest(url: url)
+        let task = URLSession.shared.dataTask(with: request) { [weak self] (data, _, error) in
+            
+            DispatchQueue.main.async {
+                if let data = data {
+                    do {
+                        let airQualityArray = try JSONDecoder().decode([AirQuality].self, from: data)
+                        self?.airForecasts[icao] = airQualityArray
+                    } catch {
+                        print("error decoding aq forecasts")
+                    }
+                } else {
+                    print("Error getting AQ forecasts")
+                }
+                self?.isFetchingAirForecast = false
+            }
+        }
+        task.resume()
+    }
+    
     // TODO: add better error handling
-    public func getAirQuality(icao: String, lat: Double, lon: Double) {
+    public func getAirQuality(icao: String, lat: Double, long: Double) {
         
         // TODO: put api key in untracked file?
         
@@ -67,7 +111,7 @@ public class WeatherController: ObservableObject {
             return
         }
         
-        let url = URL(string: "https://www.airnowapi.org/aq/observation/latLong/current/?format=application/json&latitude=\(lat)&longitude=\(lon)&API_KEY=\(airNowAPIKey)")!
+        let url = URL(string: "https://www.airnowapi.org/aq/observation/latLong/current/?format=application/json&latitude=\(lat)&longitude=\(long)&API_KEY=\(airNowAPIKey)")!
         
         isFetchingAirQuality = true
         let request = URLRequest(url: url)
