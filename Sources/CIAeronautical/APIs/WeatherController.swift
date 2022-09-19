@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  AirDataSource.swift
 //  
 //
 //  Created by Jorge Alvarez on 4/25/22.
@@ -14,9 +14,6 @@ import Combine
 @available(OSX 10.15, *)
 
 public class WeatherController: ObservableObject {
-    
-    /// Set this when instantiating the Planning API if you want to pull info accross multiple Processors for the ICAOs in here.
-    @Published public var airfieldIcaos: [String] = []
 
     @Published public var notams: [String: [Notam]] = [:]
     @Published public var notamsLastFetchedDate: Date?
@@ -39,6 +36,9 @@ public class WeatherController: ObservableObject {
     /// Publisher that contains the AQIs Forecasts for the input ICAO. Forecasts only need to be fetched once a day
     @Published public var airForecasts: [String: [AirQuality]] = [:]
     @Published public var isFetchingAirForecast = false
+    
+    /// Publisher that contains the an airfields data source for air quality
+    @Published public var airDataSources: [String: AirDataSource] = [:]
         
     // DragonBoard
     /// Date when all ahas were last fetched
@@ -60,22 +60,46 @@ public class WeatherController: ObservableObject {
     
     // MARK: - AQI (Air Quality Index)
     
+    /// Only fetches AirDataSource if the we haven't already fetched one for the given ICAO.
+    public func getAirDataSource(icao: String, reportingArea: String, stateCode: String) {
+        
+        guard airDataSources[icao] == nil else { return }
+        
+        let area = reportingArea.replacingOccurrences(of: " ", with: "%20")
+        
+        let url = URL(string: "https://airnowgovapi.com/andata/dataproviders?reportingArea=\(area)&stateCode=\(stateCode)")!
+        
+        let request = URLRequest(url: url)
+        let task = URLSession.shared.dataTask(with: request) { [weak self] (data, _, error) in
+            
+            DispatchQueue.main.async {
+                if let data = data {
+                    
+                    do {
+                        let airDataSource = try JSONDecoder().decode(AirDataSource.self, from: data)
+                        self?.airDataSources[icao] = airDataSource
+                    } catch {
+                        print("error decoding AirDataSource")
+                    }
+                } else {
+                    print("Error getting AirDataSource")
+                }
+            }
+        }
+        task.resume()
+    }
+    
+    /// Fetches Air Qualities for given location and then calls method that fetches that locations air data source.
     public func getAirQualityForecast(icao: String, lat: Double, long: Double) {
         
-        let currentDateComps = Calendar.current.dateComponents([.year, .month, .day], from: Date())
-        var currentDayString: String?
-        if let year = currentDateComps.year, let month = currentDateComps.month, let day = currentDateComps.day {
-            let monthString = month < 10 ? "0\(month)" : "\(month)"
-            let dayString = day < 10 ? "0\(day)" : "\(day)"
-            currentDayString = "\(year)-\(monthString)-\(dayString)"
-        }
+        let currentDayString = Date.yearMonthDayString(date: Date())
+        guard let date = currentDayString else { return }
         
-        // check the EARLIEST forecast in results? (should be first one in array)
-        if let date = currentDayString, let forecastString = airForecasts[icao]?.first?.dateForecast?.trimmingCharacters(in: .whitespaces), date != forecastString {
-            print("current date and forecast date match")
+        // if it DOESNT need refresh, return
+        if !AirQuality.forecastNeedsRefresh(currentDayString: date, forecasts: airForecasts[icao]) {
+            print("Air forecasts do NOT need refresh, returning early")
             return
         }
-        guard let date = currentDayString else { return }
         
         let url = URL(string: "https://www.airnowapi.org/aq/forecast/latLong/?format=application/json&latitude=\(lat)&longitude=\(long)&date=\(date)&API_KEY=\(airNowAPIKey)")!
         
@@ -88,6 +112,10 @@ public class WeatherController: ObservableObject {
                     do {
                         let airQualityArray = try JSONDecoder().decode([AirQuality].self, from: data)
                         self?.airForecasts[icao] = airQualityArray
+                        // fetch data source here, since it only needs to be fetched once every app lifecycle
+                        if let area = airQualityArray.first?.reportingArea, let state = airQualityArray.first?.stateCode {
+                            self?.getAirDataSource(icao: icao, reportingArea: area, stateCode: state)
+                        }
                     } catch {
                         print("error decoding aq forecasts")
                     }
@@ -100,11 +128,9 @@ public class WeatherController: ObservableObject {
         task.resume()
     }
     
-    // TODO: add better error handling
-    public func getAirQuality(icao: String, lat: Double, long: Double) {
-        
-        // TODO: put api key in untracked file?
-        
+    /// Fetches current AirQuality for given ICAO. Rate limiting handled per device, will need to be handled server side once project scale grows
+    public func getAirQualityCurrent(icao: String, lat: Double, long: Double) {
+                
         // return early if he already fetched airQuality for current hour and its been less than 1 hour since we last fetched it
         if let aqs = airQualities[icao], let highestAq = AirQuality.highestAqi(aqs: aqs), !highestAq.observationNeedsRefresh {
             print("selected aq doesn't need refresh")

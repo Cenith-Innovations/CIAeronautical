@@ -71,6 +71,7 @@ public struct AirQuality: Decodable, Hashable {
     public var detailUrl = URL(string: "https://www.airnow.gov")!
     
     public var observationHour: Int?
+    
     /// UTC version of date components from API ("2022-09-10 ", 7, "PST"-> Date?)
     public var observationDate: Date?
     
@@ -81,6 +82,7 @@ public struct AirQuality: Decodable, Hashable {
     public let dateFetched = Date()
     
     public var backupDateString: String {
+        // TODO: add portion that returns backup date string for forecast too?
         guard let dateObserved = dateObserved, let hour = hourObserved, let timeZone = localTimeZone else {
             return "Unknown Date"
         }
@@ -93,11 +95,24 @@ public struct AirQuality: Decodable, Hashable {
     // MARK: - Computed Properties
     
     /// Returns whether or not enough time has passed to fetch a new AQI Forecast by checking last fetched forecast's date (day only). Should only be used on AirQualities we get back from the forecast request, not current observation.
-//    public var forecastNeedsRefresh: Bool {
-//        // 1. Check if dateFetched is more than a day old. Return true if yes
-//        // 2. Get forecast date day and current date day
-//        // 3. If forecast day and current day are the same, return false
-//    }
+    static public func forecastNeedsRefresh(currentDayString: String, forecasts: [AirQuality]?) -> Bool {        
+        guard let forecastDateFetched = forecasts?.first?.dateFetched, let dateFetchedString = Date.yearMonthDayString(date: forecastDateFetched), let forecastDayString = forecasts?.first?.dateForecast?.trimmingCharacters(in: .whitespaces) else {
+            return true
+        }
+        
+        // return false if dateFetchedString matches currentDayString
+        if dateFetchedString == currentDayString {
+            print("No refresh: dateFetched = \(dateFetchedString), currentDayString = \(currentDayString)")
+            return false
+        }
+        
+        if forecastDayString == currentDayString {
+            print("No refresh: forecastDayString = \(forecastDayString), currentDayString = \(currentDayString)")
+            return false
+        }
+        
+        return true
+    }
     
     /// Compares if observationDate is
     public var observationNeedsRefresh: Bool {

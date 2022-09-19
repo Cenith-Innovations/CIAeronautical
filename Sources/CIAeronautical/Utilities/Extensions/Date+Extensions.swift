@@ -39,6 +39,18 @@ public extension Date {
         return hourZ
     }
     
+    /// Returns an optional String version of the passed in date. Ex: "2022-09-18"
+    static func yearMonthDayString(date: Date) -> String? {
+        let currentDateComps = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        var currentDayString: String?
+        if let year = currentDateComps.year, let month = currentDateComps.month, let day = currentDateComps.day {
+            let monthString = month < 10 ? "0\(month)" : "\(month)"
+            let dayString = day < 10 ? "0\(day)" : "\(day)"
+            currentDayString = "\(year)-\(monthString)-\(dayString)"
+        }
+        return currentDayString
+    }
+    
     /// Converts date component Strings into a Date that's returned
     static func componentsToDate(dateObserved: String?, hourObserved: Int?, timeZone: String?) -> Date? {
         
