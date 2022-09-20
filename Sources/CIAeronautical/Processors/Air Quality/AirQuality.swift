@@ -117,24 +117,32 @@ public struct AirQuality: Decodable, Hashable {
     /// Compares if observationDate is
     public var observationNeedsRefresh: Bool {
         
-        // TODO: also first check that we haven't last refreshed in less than 5 minutes
-        // 1. WIP - make sure at least 5 minutes have passed since dateFetched
-        // 2. DONE - only fetch if hour observed and current hour are NOT the same
-        // 3. WIP - once they're not the same, make sure current minutes is also greater than 10
-        // 4. DONE - finally, allow fetching if dateFetched is older than 1 hour
-        
+        // 1. make sure at least 5 minutes have passed since dateFetched
+        let diff = Date().timeIntervalSinceReferenceDate - dateFetched.timeIntervalSinceReferenceDate
+        let mins = Int(diff) / 60
+        if mins < 10 {
+            print("its been less than 10 minutes since we last fetched, returning early")
+            return false
+        }
+                
+        // 2. only fetch if hour observed and current hour are NOT the same
         // if observationDate is nil, check dateFetched instead
         guard let observationDate = observationDate else {
-            // as a fallback, check dateFetched so we always fetch again if it's been more than an hour
-            let diff = Date().timeIntervalSinceReferenceDate - dateFetched.timeIntervalSinceReferenceDate
-            let hours = Int(diff) / 60
-            return hours > 0
+            print("observationDate could not be made, checking dateFetched as fallback")
+            // as a fallback, return true if it's been more than 1 hour since we last fetched current observation
+            let hours = Int(mins) / 60
+            if hours > 0 {
+                print("it's been more than 1 hour, current observation needs refresh")
+                return true
+            } else {
+                print("it's been 1 hour or less, current observation does not need refresh")
+                return false
+            }
         }
         
         // use observationDate and Date()
         let observationHour = Calendar.current.dateComponents([.hour], from: observationDate).hour
         let currentHour = Calendar.current.dateComponents([.hour], from: Date()).hour
-        // also check dateFetched to also check if its been more than an hour so we can safely make another request
         print("observationHour = \(String(describing: observationHour)), currentHour = \(String(describing: currentHour))")
         let result = observationHour != currentHour
         print("observationNeedsRefresh: \(result)")
