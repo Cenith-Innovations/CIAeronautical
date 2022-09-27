@@ -110,10 +110,28 @@ public class WeatherController: ObservableObject {
             DispatchQueue.main.async {
                 if let data = data {
                     do {
-                        let airQualityArray = try JSONDecoder().decode([AirQuality].self, from: data)
-                        self?.airForecasts[icao] = airQualityArray
+                        let airForecastsArray = try JSONDecoder().decode([AirQuality].self, from: data)
+                        self?.airForecasts[icao] = airForecastsArray
+                        
+                        // TODO: value for key should be another [String: [AirQuality]] dictionary
+                        // TODO: key for inner dictionary should just be raw date comps sent
+                        var innerDict = [String: [AirQuality]]()
+                        for forecast in airForecastsArray {
+                            guard let forecastDay = forecast.dateForecast else {
+                                continue
+                            }
+                            
+                            if innerDict[forecastDay] == nil {
+                                innerDict[forecastDay] = [forecast]
+                            } else {
+                                innerDict[forecastDay]!.append(forecast)
+                            }
+                        }
+                        
+                        // TODO: sort each inner array value by categoryNumber?
+                        
                         // fetch data source here, since it only needs to be fetched once every app lifecycle
-                        if let area = airQualityArray.first?.reportingArea, let state = airQualityArray.first?.stateCode {
+                        if let area = airForecastsArray.first?.reportingArea, let state = airForecastsArray.first?.stateCode {
                             self?.getAirDataSource(icao: icao, reportingArea: area, stateCode: state)
                         }
                     } catch {
@@ -140,6 +158,9 @@ public class WeatherController: ObservableObject {
         let url = URL(string: "https://www.airnowapi.org/aq/observation/latLong/current/?format=application/json&latitude=\(lat)&longitude=\(long)&API_KEY=\(airNowAPIKey)")!
         
         isFetchingAirQuality = true
+        
+        self.airQualities[icao] = nil
+        
         let request = URLRequest(url: url)
         let task = URLSession.shared.dataTask(with: request) { [weak self] (data, _, error) in
             

@@ -32,6 +32,9 @@ public struct NotamHandler {
         var runways: [String] = []
         var n = removeNewLinesAndSpaces(notam: notam)
         
+        // TODO: crashes when given certain notams. Ex:
+        // "<b>M1085/22</b> - AFLD PAINTING IN PROGRESS. TWY N CLSD ADJACENT TO 900 RAMP FROM\n SPOT 904 THROUGH TWY K. 900 RAMP SPOT 902 CLSD. TWY L CLSD FROM RWY\n 21R/03L TO 700 RAMP. TWY K CLSD ADJACENT TO 600 RAMP SPOT 613. 600\n RAMP SPOT 613 CLSD. 23 SEP 19:31 2022 UNTIL 01 OCT 02:00 2022. CREATED: 23\nSEP 19:31 2022\n"
+        
         if let twyStart = n.range(of: "TWY")?.upperBound {
             if let clsdEnd = n.range(of: "CLSD")?.lowerBound{
                 if twyStart <= clsdEnd {
@@ -43,6 +46,7 @@ public struct NotamHandler {
         
         if let startIndex = n.range(of: "RWY")?.upperBound {
             if let endIndex = n.range(of: "CLSD")?.lowerBound {
+                // TODO: can crash here if out of range
                 let closedRunway = n[startIndex..<endIndex]
                 let runway = String(closedRunway).components(separatedBy: "/")
                 

@@ -61,7 +61,7 @@ public struct AirQuality: Decodable, Hashable {
     public var actionDay: Bool?
     
     // Discussion
-    /// Forecast only. Usually empty
+    /// Forecast only. Usually empty. Could also sometimes be url
     public var discussion: String?
     
     // Custom properties

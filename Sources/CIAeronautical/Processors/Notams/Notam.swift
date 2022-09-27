@@ -26,7 +26,8 @@ public struct Notam: Identifiable, Loopable, Hashable {
         creationDate = NotamHandler.getCreationDate(notam: notam)
         startDate = times.start
         endDate = times.end
-        closedRunways = NotamHandler.getAllClosedRunways(notam: notam)
+        // TODO: causes crash sometimes. See method for details
+//        closedRunways = NotamHandler.getAllClosedRunways(notam: notam)
         rvrOutOfService = NotamHandler.getRVRoutOfServiceForRWYs(notam: notam)
     }
     // TODO: Tie the properties below
