@@ -8,7 +8,25 @@
 import Foundation
 import SwiftUI
 
-public struct AirQuality: Decodable, Hashable {
+public struct AirQuality: Decodable, Hashable, Comparable {
+    
+    public static func < (lhs: AirQuality, rhs: AirQuality) -> Bool {
+        
+        // aqi
+        if let lhsAqi = lhs.aqi, let rhsAqi = rhs.aqi { return lhsAqi < rhsAqi }
+        
+        // categoryNumber
+        if let lhsCat = lhs.categoryNumber, let rhsCat = rhs.categoryNumber { return lhsCat < rhsCat }
+        
+        // parameterName
+        if let lhsPol = lhs.parameterName, let rhsPol = rhs.parameterName {
+            let polDict = ["NO2": 1, "CO": 2, "PM2.5": 3, "PM10": 4, "O3": 5]
+            return polDict[lhsPol, default: 0] < polDict[rhsPol, default: 0]
+        }
+        
+        // if all are nil???
+        return true
+    }
     
     // MARK: - CodingKeys
     
@@ -94,6 +112,29 @@ public struct AirQuality: Decodable, Hashable {
     
     // MARK: - Computed Properties
     
+    /// Returns an array of AirQuality that only contains the primary pollutant for each day's forecast
+    static public func weeklyForecasts(forecasts: [AirQuality]) -> [String: [AirQuality]] {
+        
+        var result = [String: [AirQuality]]()
+        
+        var innerDict = [String: [AirQuality]]()
+        for forecast in forecasts {
+            guard let forecastDay = forecast.dateForecast else { continue }
+            if innerDict[forecastDay] == nil { innerDict[forecastDay] = [forecast] }
+            else { innerDict[forecastDay]!.append(forecast) }
+        }
+                
+        // for each day, sort it's inner dictionary values by aqi, then categoryNumber, then parameterName
+        for day in innerDict.keys {
+            
+            guard let dayForecasts = innerDict[day] else { continue }
+            let sorted = dayForecasts.sorted { $0 > $1 }
+            result[day] = sorted
+        }
+                
+        return result
+    }
+    
     /// Returns whether or not enough time has passed to fetch a new AQI Forecast by checking last fetched forecast's date (day only). Should only be used on AirQualities we get back from the forecast request, not current observation.
     static public func forecastNeedsRefresh(currentDayString: String, forecasts: [AirQuality]?) -> Bool {        
         guard let forecastDateFetched = forecasts?.first?.dateFetched, let dateFetchedString = Date.yearMonthDayString(date: forecastDateFetched), let forecastDayString = forecasts?.first?.dateForecast?.trimmingCharacters(in: .whitespaces) else {
@@ -164,6 +205,10 @@ public struct AirQuality: Decodable, Hashable {
             return "Fine Particles"
         case "PM10":
             return "Coarse Particles"
+        case "NO2":
+            return "Nitrogen Dioxide"
+        case "CO":
+            return "Carbon Monoxide"
         default:
             return nil
         }

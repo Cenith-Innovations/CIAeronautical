@@ -34,7 +34,7 @@ public class WeatherController: ObservableObject {
     @Published public var isFetchingAirQuality = false
     
     /// Publisher that contains the AQIs Forecasts for the input ICAO. Forecasts only need to be fetched once a day
-    @Published public var airForecasts: [String: [AirQuality]] = [:]
+    @Published public var airForecasts = [String: [String: [AirQuality]]]()
     @Published public var isFetchingAirForecast = false
     
     /// Publisher that contains the an airfields data source for air quality
@@ -96,7 +96,7 @@ public class WeatherController: ObservableObject {
         guard let date = currentDayString else { return }
         
         // if it DOESNT need refresh, return
-        if !AirQuality.forecastNeedsRefresh(currentDayString: date, forecasts: airForecasts[icao]) {
+        if !AirQuality.forecastNeedsRefresh(currentDayString: date, forecasts: airForecasts[icao]?[date + " "]) {
             print("Air forecasts do NOT need refresh, returning early")
             return
         }
@@ -111,25 +111,9 @@ public class WeatherController: ObservableObject {
                 if let data = data {
                     do {
                         let airForecastsArray = try JSONDecoder().decode([AirQuality].self, from: data)
-                        self?.airForecasts[icao] = airForecastsArray
+                        self?.airForecasts[icao] = AirQuality.weeklyForecasts(forecasts: airForecastsArray)
                         
-                        // TODO: value for key should be another [String: [AirQuality]] dictionary
-                        // TODO: key for inner dictionary should just be raw date comps sent
-                        var innerDict = [String: [AirQuality]]()
-                        for forecast in airForecastsArray {
-                            guard let forecastDay = forecast.dateForecast else {
-                                continue
-                            }
-                            
-                            if innerDict[forecastDay] == nil {
-                                innerDict[forecastDay] = [forecast]
-                            } else {
-                                innerDict[forecastDay]!.append(forecast)
-                            }
-                        }
-                        
-                        // TODO: sort each inner array value by categoryNumber?
-                        
+                        // TODO: if we get no forecast for this ICAO, use reporting area from its current observation?
                         // fetch data source here, since it only needs to be fetched once every app lifecycle
                         if let area = airForecastsArray.first?.reportingArea, let state = airForecastsArray.first?.stateCode {
                             self?.getAirDataSource(icao: icao, reportingArea: area, stateCode: state)

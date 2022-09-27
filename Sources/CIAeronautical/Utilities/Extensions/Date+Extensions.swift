@@ -39,6 +39,44 @@ public extension Date {
         return hourZ
     }
     
+    /// Ex: "2022-09-28 " -> "Wednesday"
+    static func weekdayString(dateString: String?) -> String? {
+        
+        guard let dateString = dateString else { return nil }
+        
+        let yearMonthDay = dateString.trimmingCharacters(in: .whitespaces).split(separator: "-")
+        guard yearMonthDay.count == 3, let year = Int(yearMonthDay[0]), let month = Int(yearMonthDay[1]), let day = Int(yearMonthDay[2]) else {
+            print("\(yearMonthDay) could not be made into comps")
+            return nil
+        }
+        
+        let cal = Calendar.current
+        let comps = DateComponents(calendar: cal, year: year, month: month, day: day)
+        if let date = cal.date(from: comps) {
+            let dateComps = cal.component(.weekday, from: date)
+            switch dateComps {
+            case 1:
+                return "Sunday"
+            case 2:
+                return "Monday"
+            case 3:
+                return "Tuesday"
+            case 4:
+                return "Wednesday"
+            case 5:
+                return "Thursday"
+            case 6:
+                return "Friday"
+            case 7:
+                return "Saturday"
+            default:
+                return nil
+            }
+        }
+        
+        return nil
+    }
+    
     /// Returns an optional String version of the passed in date. Ex: "2022-09-18"
     static func yearMonthDayString(date: Date) -> String? {
         let currentDateComps = Calendar.current.dateComponents([.year, .month, .day], from: date)
