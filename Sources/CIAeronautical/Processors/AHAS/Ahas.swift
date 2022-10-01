@@ -25,7 +25,7 @@ public enum AhasField: String, CaseIterable {
     case alt5 = "Alt5"
 }
 
-public struct Ahas: Loopable {
+public struct Ahas: Loopable, Hashable {
     public var route: String?
     public var segment: String?
     public var hour: String? //Z time

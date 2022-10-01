@@ -15,10 +15,12 @@ public struct AhasWebAPI {
                          month: String,
                          day: String,
                          hour: String,
-                         parameters: [String: String]?) -> URL {
+                         parameters: [String: String]? = nil,
+                        hr12Risk: Bool = false) -> URL {
         
+        let hr12RiskURLString = "http://www.usahas.com/webservices/ahas.asmx/GetAHASRisk12?"
         
-        var components = URLComponents(string: baseURLString)!
+        var components = URLComponents(string: hr12Risk ? hr12RiskURLString : baseURLString)!
         var queryItems = [URLQueryItem]()
         
         let baseParams = [

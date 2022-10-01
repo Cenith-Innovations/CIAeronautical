@@ -13,6 +13,7 @@ public enum DateFormat {
     case ahas
     case notam
     case metarTaf
+    case ahas12Hr
     
     @available(*, deprecated, renamed: "value")
     public var rawValue: String {
@@ -25,6 +26,7 @@ public enum DateFormat {
         case .ahas: return "yyyy'-'MM'-'dd' 'HH':'mm':'ss.sss"
         case .notam: return "ddMMMHH:mmyyyy" //16JUL07:392019
         case .metarTaf: return "yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'"
+        case .ahas12Hr: return "yyyy'-'MM'-'dd' 'HH':'mm'"
         }
     }
 }

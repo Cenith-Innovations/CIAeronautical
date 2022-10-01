@@ -14,6 +14,7 @@ public class AhasParser: NSObject, XMLParserDelegate {
     private var currentAhas: [String:String]?
     private var currentValue: String?
     var ahas: [Ahas] = []
+    var currTableInt = 0
     
     convenience init(data: Data) {
         self.init()
@@ -27,20 +28,21 @@ public class AhasParser: NSObject, XMLParserDelegate {
     }
     
     public func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
-        if elementName == "NewDataSet" {
+        if elementName == "Table\(currTableInt == 0 ? "" : "\(currTableInt)")" {
             currentAhas = [:]
         } else if ahasKeys.contains(elementName) {
             currentValue = ""
         }
-        }
+    }
     
     public func parser(_ parser: XMLParser, foundCharacters string: String) {
         currentValue? += string
     }
     
     public func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
-        if elementName == "NewDataSet" {
+        if elementName == "Table\(currTableInt == 0 ? "" : "\(currTableInt)")" {
             results!.append(currentAhas!)
+            currTableInt += 1
             currentAhas = nil
         } else if ahasKeys.contains(elementName) {
             currentAhas![elementName] = currentValue
@@ -51,14 +53,22 @@ public class AhasParser: NSObject, XMLParserDelegate {
     public func parserDidEndDocument(_ parser: XMLParser) {
         if let resultAhas = results {
             for ahas in resultAhas {
-                let ahasDateTime = ahas[AhasField.dateTime.rawValue].getDateFrom(ofType: .ahas)
+                
+                // try .ahas12Hr DateFormat first
+                var ahasDateTime = ahas[AhasField.dateTime.rawValue].getDateFrom(ofType: .ahas12Hr)
+                
+                // if ahasDateTime is nil (couldn't decode using .ahas12Hr DateFormat), try .ahas instead
+                if ahasDateTime == nil {
+                    ahasDateTime = ahas[AhasField.dateTime.rawValue].getDateFrom(ofType: .ahas)
+                }
+                
                 let bird = Ahas(route: ahas[AhasField.route.rawValue],
                                 segment: ahas[AhasField.segment.rawValue],
                                 hour: ahas[AhasField.hour.rawValue],
                                 dateTime: ahasDateTime,
                                 nextRadRisk: ahas[AhasField.nextRadRisk.rawValue],
                                 soarRisk: ahas[AhasField.soarRisk.rawValue],
-                                ahasRisk: ahas[AhasField.ahasRisk.rawValue],
+                                ahasRisk: ahas[AhasField.ahasRisk.rawValue]?.uppercased(),
                                 basedOn: ahas[AhasField.basedOn.rawValue],
                                 tiDepth: ahas[AhasField.tiDepth.rawValue],
                                 alt1: ahas[AhasField.alt1.rawValue],

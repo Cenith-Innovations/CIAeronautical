@@ -311,12 +311,11 @@ public class WeatherController: ObservableObject {
         self.getBirdCondition(area: area,
                               month: Date.getAhasDateComponents().month,
                               day: Date.getAhasDateComponents().day,
-                              hourZ: Date.getAhasDateComponents().hourZ,
-                              duration: nil)
+                              hourZ: Date.getAhasDateComponents().hourZ)
     }
         
-    private func getBirdCondition(area: String, month: String, day: String, hourZ: String, duration: Int?) {
-        let url = AhasWebAPI.AhasURL(area: area, month: month, day: day, hour: hourZ, parameters: nil)
+    private func getBirdCondition(area: String, month: String, day: String, hourZ: String) {
+        let url = AhasWebAPI.AhasURL(area: area, month: month, day: day, hour: hourZ, hr12Risk: true)
         let request = URLRequest(url: url)
         let session = URLSession(configuration: .ephemeral)
         let task = session.dataTask(with: request) { [weak self] (data, response, error) -> Void in
@@ -355,7 +354,7 @@ public class WeatherController: ObservableObject {
                                      month: Date.getAhasDateComponents().month,
                                      day: Date.getAhasDateComponents().day,
                                      hour: Date.getAhasDateComponents().hourZ,
-                                     parameters: nil)
+                                     hr12Risk: true)
         
         let request = URLRequest(url: url)
         let session = URLSession(configuration: .ephemeral)
