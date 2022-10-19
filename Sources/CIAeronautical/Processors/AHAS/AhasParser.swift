@@ -75,7 +75,8 @@ public class AhasParser: NSObject, XMLParserDelegate {
                                 alt2: ahas[AhasField.alt2.rawValue],
                                 alt3: ahas[AhasField.alt3.rawValue],
                                 alt4: ahas[AhasField.alt4.rawValue],
-                                alt5: ahas[AhasField.alt5.rawValue])
+                                alt5: ahas[AhasField.alt5.rawValue],
+                                dateFetched: Date())
                 self.ahas.append(bird)
             }}}
     

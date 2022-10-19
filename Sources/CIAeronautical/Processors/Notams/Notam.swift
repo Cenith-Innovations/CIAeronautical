@@ -28,7 +28,7 @@ public struct Notam: Identifiable, Loopable, Hashable {
         endDate = times.end
         // TODO: causes crash sometimes. See method for details
 //        closedRunways = NotamHandler.getAllClosedRunways(notam: notam)
-        rvrOutOfService = NotamHandler.getRVRoutOfServiceForRWYs(notam: notam)
+//        rvrOutOfService = NotamHandler.getRVRoutOfServiceForRWYs(notam: notam)
     }
     // TODO: Tie the properties below
     var stateCode: String?    //ISO 3-Letter code of the State
@@ -44,7 +44,6 @@ public struct Notam: Identifiable, Loopable, Hashable {
     var message: String?        //Message part of the NOTAM, if available
 
     var isIcao: String?        //If the NOTAM is compliant with Doc ABC. If false, no Q-code decoding is available
-    var type: String?        //Location type, either airspace or airport
     var criticality: Int?    //The criticality level of the NOTAM as assessed by NORM. Criticality is a number between 0 (garbage) and 4 (critical). -1 if not assessed.
     
 }

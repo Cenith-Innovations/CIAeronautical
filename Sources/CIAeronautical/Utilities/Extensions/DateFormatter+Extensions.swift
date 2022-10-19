@@ -27,4 +27,12 @@ public extension DateFormatter {
         sharedTimeZoneFormatter.dateFormat = "h a zzz MMM d, yyyy"
         return sharedTimeZoneFormatter.string(from: date)
     }
+    
+    /// "10/17/2022 1215"
+    static let notamFaaDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(abbreviation: "UTC")!
+        formatter.dateFormat = "MM/dd/yyyy HHmm"
+        return formatter
+    }()
 }

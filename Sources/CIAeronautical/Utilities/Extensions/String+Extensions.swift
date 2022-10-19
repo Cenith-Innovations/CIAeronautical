@@ -48,4 +48,10 @@ public extension String {
             return df.date(from: self)
     }}
     
+    /// Turns Notam date Strings into a Date. Ex: "10/08/2022 1215" into Date. Also works if String ends in "EST"
+    func notamDate() -> Date? {
+        var str = self
+        if str.contains("EST") { str = str.replacingOccurrences(of: "EST", with: "") }
+        return DateFormatter.notamFaaDateFormatter.date(from: str)
+    }
 }

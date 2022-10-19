@@ -18,6 +18,8 @@ public class WeatherController: ObservableObject {
     @Published public var notams: [String: [Notam]] = [:]
     @Published public var notamsLastFetchedDate: Date?
     
+    @Published public var notamsFaa: [String: [NOTAM]] = [:]
+    
     /// Publisher that holds Metars corresponding to AirfieldIcaos
     @Published public var metars: [String: Metar] = [:]
     @Published public var metarsLastFetchedDate: Date?
@@ -177,7 +179,7 @@ public class WeatherController: ObservableObject {
     public func getAllWeather(icaos: [String]) {
         getAllMetars(icaos: icaos)
         getAllTafs(icaos: icaos)
-        getAllNotams(icaos: icaos)
+//        getAllNotams(icaos: icaos)
     }
     
     // MARK: METAR
@@ -247,6 +249,53 @@ public class WeatherController: ObservableObject {
     }
     
     // MARK: NOTAM
+    
+    public func getNotamFAA(icao: String) {
+        
+        // TODO: move this logic somewhere else? (make computed property?)
+        if let lastDate = notamsFaa[icao]?.first?.dateFetched {
+            print("\(icao) dateFetched: \(lastDate)")
+            let diff = Date().timeIntervalSinceReferenceDate - lastDate.timeIntervalSinceReferenceDate
+            print("notams diff = \(diff)")
+            if diff < 120 {
+                print("fetched notamsFaa less than 2 mins ago")
+                return
+            }
+            print("its been longer than 2 minutes since fetching \(icao) notams")
+        }
+        
+        let url = URL(string: "https://notams.aim.faa.gov/notamSearch/search")!
+        var request = URLRequest(url: url)
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpMethod = "POST"
+        let postData = "searchType=0&designatorsForLocation=\(icao)&designatorForAccountable=&latDegrees=&latMinutes=0&latSeconds=0&longDegrees=&longMinutes=0&longSeconds=0&radius=10&sortColumns=5+false&sortDirection=true&designatorForNotamNumberSearch=&notamNumber=&radiusSearchOnDesignator=false&radiusSearchDesignator=&latitudeDirection=N&longitudeDirection=W&freeFormText=&flightPathText=&flightPathDivertAirfields=&flightPathBuffer=4&flightPathIncludeNavaids=true&flightPathIncludeArtcc=false&flightPathIncludeTfr=true&flightPathIncludeRegulatory=false&flightPathResultsType=All+NOTAMs&archiveDate=&archiveDesignator=offset=0&filters=Keywords:+Aerodrome-AD~Aerodrome-APRON~Aerodrome-CONSTRUCTION~Aerodrome-RWY~Aerodrome-SVC~Aerodrome-TWY~Airspace-AIRSPACE~Airspace-CARF~Airspace-TFR~Chart-CHART~Communication-AD~Communication-COM~GPS-GPS~International-INTERNATIONAL~Military-MILITARY~Navaid-AD~Navaid-AIRSPACE~Navaid-COM~Navaid-NAV~Navaid-RWY~Navaid-SVC~Obstruction-OBST~Other-(O)~Procedure-FDC/Other~Procedure-IAP~Procedure-ODP~Procedure-SID~Procedure-SPECIAL~Procedure-STAR~Procedure-VFP~Route-ROUTE~Security-SECURITY~Services-SVC"
+        request.httpBody = postData.data(using: .utf8)
+        
+        let task = URLSession.shared.dataTask(with: request) { [weak self] (data, _, error) in
+            
+            DispatchQueue.main.async {
+                if let data = data {
+                    
+                    do {
+                        let notamsResponse = try JSONDecoder().decode(NotamsResponse.self, from: data)
+                        
+                        // TODO: check total count to know if we need to do one extra request f
+                        if let notams = notamsResponse.notamList {
+                            print(notams)
+                            self?.notamsFaa[icao] = notams
+                        }
+                        
+                    } catch {
+                        print("error decoding notam faa")
+                    }
+                    
+                } else {
+                    print("no data notams faa")
+                }
+            }
+        }
+        task.resume()
+    }
     
     /// Retrieves the notams for the corresponding array of icao.
     /// - Parameter icaos: an array of desired icao.
