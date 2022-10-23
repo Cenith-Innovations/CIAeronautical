@@ -268,7 +268,10 @@ public class WeatherController: ObservableObject {
         var request = URLRequest(url: url)
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.httpMethod = "POST"
+        
+        // TODO: only send relevant parameters?
         let postData = "searchType=0&designatorsForLocation=\(icao)&designatorForAccountable=&latDegrees=&latMinutes=0&latSeconds=0&longDegrees=&longMinutes=0&longSeconds=0&radius=10&sortColumns=5+false&sortDirection=true&designatorForNotamNumberSearch=&notamNumber=&radiusSearchOnDesignator=false&radiusSearchDesignator=&latitudeDirection=N&longitudeDirection=W&freeFormText=&flightPathText=&flightPathDivertAirfields=&flightPathBuffer=4&flightPathIncludeNavaids=true&flightPathIncludeArtcc=false&flightPathIncludeTfr=true&flightPathIncludeRegulatory=false&flightPathResultsType=All+NOTAMs&archiveDate=&archiveDesignator=offset=0&filters=Keywords:+Aerodrome-AD~Aerodrome-APRON~Aerodrome-CONSTRUCTION~Aerodrome-RWY~Aerodrome-SVC~Aerodrome-TWY~Airspace-AIRSPACE~Airspace-CARF~Airspace-TFR~Chart-CHART~Communication-AD~Communication-COM~GPS-GPS~International-INTERNATIONAL~Military-MILITARY~Navaid-AD~Navaid-AIRSPACE~Navaid-COM~Navaid-NAV~Navaid-RWY~Navaid-SVC~Obstruction-OBST~Other-(O)~Procedure-FDC/Other~Procedure-IAP~Procedure-ODP~Procedure-SID~Procedure-SPECIAL~Procedure-STAR~Procedure-VFP~Route-ROUTE~Security-SECURITY~Services-SVC"
+        
         request.httpBody = postData.data(using: .utf8)
         
         let task = URLSession.shared.dataTask(with: request) { [weak self] (data, _, error) in
@@ -281,14 +284,11 @@ public class WeatherController: ObservableObject {
                         
                         // TODO: check total count to know if we need to do one extra request f
                         if let notams = notamsResponse.notamList {
-                            print(notams)
                             self?.notamsFaa[icao] = notams
                         }
-                        
                     } catch {
                         print("error decoding notam faa")
                     }
-                    
                 } else {
                     print("no data notams faa")
                 }

@@ -13,7 +13,7 @@ public struct AirQuality: Decodable, Hashable, Comparable {
     public static func < (lhs: AirQuality, rhs: AirQuality) -> Bool {
         
         // aqi
-        if let lhsAqi = lhs.aqi, let rhsAqi = rhs.aqi { return lhsAqi < rhsAqi }
+        if let lhsAqi = lhs.aqi, let rhsAqi = rhs.aqi, lhsAqi != rhsAqi { return lhsAqi < rhsAqi }
         
         // categoryNumber
         if let lhsCat = lhs.categoryNumber, let rhsCat = rhs.categoryNumber { return lhsCat < rhsCat }
