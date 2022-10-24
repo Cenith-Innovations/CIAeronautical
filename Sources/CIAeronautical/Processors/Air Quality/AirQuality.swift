@@ -20,7 +20,7 @@ public struct AirQuality: Decodable, Hashable, Comparable {
         
         // parameterName
         if let lhsPol = lhs.parameterName, let rhsPol = rhs.parameterName {
-            let polDict = ["NO2": 1, "CO": 2, "PM2.5": 3, "PM10": 4, "O3": 5]
+            let polDict = ["NO2": 5, "CO": 4, "PM2.5": 3, "PM10": 2, "O3": 1]
             return polDict[lhsPol, default: 0] < polDict[rhsPol, default: 0]
         }
         
