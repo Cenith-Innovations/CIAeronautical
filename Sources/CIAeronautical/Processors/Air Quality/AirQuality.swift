@@ -16,7 +16,7 @@ public struct AirQuality: Decodable, Hashable, Comparable {
         if let lhsAqi = lhs.aqi, let rhsAqi = rhs.aqi, lhsAqi != rhsAqi { return lhsAqi < rhsAqi }
         
         // categoryNumber
-        if let lhsCat = lhs.categoryNumber, let rhsCat = rhs.categoryNumber { return lhsCat < rhsCat }
+        if let lhsCat = lhs.categoryNumber, let rhsCat = rhs.categoryNumber, lhsCat != rhsCat { return lhsCat < rhsCat }
         
         // parameterName
         if let lhsPol = lhs.parameterName, let rhsPol = rhs.parameterName {
