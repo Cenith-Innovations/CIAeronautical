@@ -15,13 +15,13 @@ public struct Metar: Hashable, Loopable {
         SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 700)
     ]
     
-    public static var DummyMETAR = Metar(rawText: "KBAB 130158Z AUTO 33009KT 10SM CLR 17/M01 A3008 RMK AO2 SLP189 T01661006 $", stationId: "KBAB", observationTime: Date(), latitude: 45.0, longitude: -121.0, tempC: 0, dewPointC: 0, windDirDegrees: 35, windSpeedKts: 10, windGustKts: 10, visibilityStatuteMiles: 10, altimeterInHg: 30.01, seaLevelPressureMb: 0, qualityControlFlags: "\n        TRUE\n        TRUE\n        TRUE\n      ", wxString: nil, skyCondition: Metar.DummySkyConditions, flightCategory: "VFR", threeHrPressureTendencyMb: nil, maxTempPastSixHoursC: 0, minTempPastSixHoursC: 0, maxTemp24HrC: 0, minTemp24HrC: 0, precipIn: 0, precipLast3HoursIn: 0, precipLast6HoursIn: 0, precipLast24HoursIn: 0, snowIn: 0, vertVisFt: 0, metarType: nil, elevationM: 0)
+    public static var DummyMETAR = Metar(rawText: "KBAB 130158Z AUTO 33009KT 10SM CLR 17/M01 A3008 RMK AO2 SLP189 T01661006 $", stationId: "KBAB", observationTime: Date(), latitude: 45.0, longitude: -121.0, tempC: 0, dewPointC: 0, windDirDegrees: 35, windSpeedKts: 10, windGustKts: 10, visibilityStatuteMiles: 10, altimeterInHg: 30.01, seaLevelPressureMb: 0, qualityControlFlags: "\n        TRUE\n        TRUE\n        TRUE\n      ", wxString: nil, skyConditions: Metar.DummySkyConditions, flightCategory: "VFR", threeHrPressureTendencyMb: nil, maxTempPastSixHoursC: 0, minTempPastSixHoursC: 0, maxTemp24HrC: 0, minTemp24HrC: 0, precipIn: 0, precipLast3HoursIn: 0, precipLast6HoursIn: 0, precipLast24HoursIn: 0, snowIn: 0, vertVisFt: 0, metarType: nil, elevationM: 0)
     
     public func hash(into hasher: inout Hasher) {
         hasher.combine(stationId)
     }
     
-    public init(rawText: String, stationId: String, observationTime: Date?, latitude: Double, longitude: Double, tempC: Double, dewPointC: Double, windDirDegrees: Double, windSpeedKts: Double, windGustKts: Double, visibilityStatuteMiles: Double, altimeterInHg: Double, seaLevelPressureMb: Double, qualityControlFlags: String, wxString: String?, skyCondition: [SkyCondition?]?, flightCategory: String, threeHrPressureTendencyMb: String?, maxTempPastSixHoursC: Double, minTempPastSixHoursC: Double, maxTemp24HrC: Double, minTemp24HrC: Double, precipIn: Double, precipLast3HoursIn: Double, precipLast6HoursIn: Double, precipLast24HoursIn: Double, snowIn: Double, vertVisFt: Double, metarType: String?, elevationM: Double) {
+    public init(rawText: String, stationId: String, observationTime: Date?, latitude: Double, longitude: Double, tempC: Double, dewPointC: Double, windDirDegrees: Double, windSpeedKts: Double, windGustKts: Double, visibilityStatuteMiles: Double, altimeterInHg: Double, seaLevelPressureMb: Double, qualityControlFlags: String, wxString: String?, skyConditions: [SkyCondition]?, flightCategory: String, threeHrPressureTendencyMb: String?, maxTempPastSixHoursC: Double, minTempPastSixHoursC: Double, maxTemp24HrC: Double, minTemp24HrC: Double, precipIn: Double, precipLast3HoursIn: Double, precipLast6HoursIn: Double, precipLast24HoursIn: Double, snowIn: Double, vertVisFt: Double, metarType: String?, elevationM: Double) {
         self.rawText = rawText
         self.stationId = stationId
         self.observationTime = observationTime
@@ -37,7 +37,7 @@ public struct Metar: Hashable, Loopable {
         self.seaLevelPressureMb = seaLevelPressureMb
         self.qualityControlFlags = qualityControlFlags
         self.wxString = wxString
-        self.skyCondition = skyCondition
+        self.skyConditions = skyConditions
         self.flightCategory = flightCategory
         self.threeHrPressureTendencyMb = threeHrPressureTendencyMb
         self.maxTempPastSixHoursC = maxTempPastSixHoursC
@@ -70,7 +70,7 @@ public struct Metar: Hashable, Loopable {
     public var seaLevelPressureMb: Double?
     public var qualityControlFlags: String?
     public var wxString: String?
-    public var skyCondition: [SkyCondition?]?
+    public var skyConditions: [SkyCondition]?
     public var flightCategory: String?
     public var threeHrPressureTendencyMb: String?
     public var maxTempPastSixHoursC: Double?
