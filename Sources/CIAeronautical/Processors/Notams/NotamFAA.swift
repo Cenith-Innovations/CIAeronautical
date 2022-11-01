@@ -63,6 +63,40 @@ public struct NOTAM: Decodable, Hashable {
     
     // MARK: - Computed Properties
     
+    /// Returns whether or not cleanText contains any warning words.
+    public var hasWarnings: Bool {
+        
+        let notam = self.cleanText ?? ""
+        let words = notam.split(separator: " ")
+        let count = words.count
+        var i = 0
+        
+        while i < count {
+            let word = "\(words[i])"
+            
+            if NOTAM.redWords.contains(word) {
+                            
+                // OUT OF SERVICE?
+                if word == "OUT" {
+                    if (i + 2) < count && words[i+1] == "OF" && words[i+2].contains("SERVICE") {
+                        return true
+                    } else {
+                        i += 1
+                        continue
+                    }
+                }
+                
+                // Every other warning
+                else {
+                    return true
+                }
+            }
+            i += 1
+        }
+        
+        return false
+    }
+    
     /// Returns Tuple containing Strings to be displayed after effective and expiration Dates to display when they'll be active / duration
     public func duration() -> (effectiveString: String, expirationString: String) {
         
@@ -280,17 +314,14 @@ public struct NOTAM: Decodable, Hashable {
         // Airspace
         if first == "A" { return .airspace }
         
-        // (first letter has to be X AND we need to check message for BASH or Birds keywords)
         // Birds
         let birdWords = Set(["BASH", "BIRD", "BIRDS"])
-        if both == "XX" {
-            guard let text = rawText else { return .none }
-            let words = text.replacingOccurrences(of: "\n", with: "").split(separator: " ")
-            for word in words {
-                let currWord = "\(word)"
-                if birdWords.contains(currWord) {
-                    return .birds
-                }
+        guard let text = rawText else { return .none }
+        let words = text.replacingOccurrences(of: "\n", with: "").split(separator: " ")
+        for word in words {
+            let currWord = "\(word)"
+            if birdWords.contains(currWord) {
+                return .birds
             }
         }
         
@@ -300,7 +331,7 @@ public struct NOTAM: Decodable, Hashable {
     }
     
     /// CLOSED, UNSERVICEABLE, OUT, OTS
-    public static let redWords: Set<String> = ["CLOSED.", "CLOSED", "UNSERVICEABLE", "UNSERVICEABLE.", "OUT", "OUT OF SERVICE", "OUT OF SERVICE.", "CLSD", "CLSD", "OTS", "OTS."]
+    public static let redWords: Set<String> = ["CLOSED.", "CLOSED", "UNSERVICEABLE", "UNSERVICEABLE.", "OUT", "OUT OF SERVICE", "OUT OF SERVICE.", "CLSD.", "CLSD", "OTS", "OTS."]
     
     public static let contractionsDict = ["ABN": "AIRPORT BEACON",
                                    "ABV.": "ABOVE",
