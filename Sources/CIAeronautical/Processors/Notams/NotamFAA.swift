@@ -333,7 +333,7 @@ public struct NOTAM: Decodable, Hashable {
     /// CLOSED, UNSERVICEABLE, OUT, OTS
     public static let redWords: Set<String> = ["CLOSED.", "CLOSED", "UNSERVICEABLE", "UNSERVICEABLE.", "OUT", "OUT OF SERVICE", "OUT OF SERVICE.", "CLSD.", "CLSD", "OTS", "OTS."]
     
-    public static let contractionsDict = ["ABN": "AIRPORT BEACON",
+    public static let contractionsDict = ["ABN.": "AIRPORT BEACON",
                                    "ABV.": "ABOVE",
                                    "ACC.": "AREA CONTROL CENTER (ARTCC)",
                                    "ACCUM.": "ACCUMULATE",

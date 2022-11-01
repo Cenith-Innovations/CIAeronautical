@@ -179,7 +179,6 @@ public class WeatherController: ObservableObject {
     public func getAllWeather(icaos: [String]) {
         getAllMetars(icaos: icaos)
         getAllTafs(icaos: icaos)
-//        getAllNotams(icaos: icaos)
     }
     
     // MARK: METAR
