@@ -27,7 +27,7 @@ public struct WX {
         
         let speed = Int(metar.windSpeedKts ?? 0.0)
         let gustInt = Int(metar.windGustKts ?? 0.0)
-        let gustString = gustInt == 0 ? "" : " gust \(gustInt)"
+        let gustString = gustInt == 0 ? "" : " Gust \(gustInt)"
         let flightCategory = metar.flightCategory ?? "NA"
         var windString = "\(direction) at \(speed) kts\(gustString)"
         if speed == 0 { windString = "Winds Calm" }
@@ -38,7 +38,7 @@ public struct WX {
         // Visibility with color
         let visCategory = WX.visFlightCategory(vis: metar.visibilityStatuteMiles)
         let visColor = WX.colors[visCategory.rawValue]
-        let visString = metar.visibilityStatuteMiles == nil ? "Vis NA" : "\(Int(metar.visibilityStatuteMiles!)) sm"
+        let visString = metar.visibilityStatuteMiles == nil ? "Vis NA" : "\(Int(metar.visibilityStatuteMiles!)) SM"
         let visText = Text(visString).foregroundColor(visCategory == .vfr ? Color.primary : visColor)
         
         var ceilingString = ""
@@ -88,7 +88,7 @@ public struct WX {
         }
         
         return HStack(spacing: 2) {
-            flightCategoryText + Text(" \(windString) ") + visText + ceilingText
+            flightCategoryText + Text(", \(windString), ") + visText + Text(", ") + ceilingText
             
             wxIcon.foregroundColor(iconColor)
         }
@@ -184,6 +184,11 @@ public struct WX {
         /// 27. Drizzle. "DZ"
         case drizzle
         
+        /// Drizzle (NO Ceiling). Has Night icon
+        case drizzleNoCeiling
+        /// Drizzle (NO Ceiling). Has Night icon
+        case drizzleNoCeilingNight
+        
         /// 28. Smoke. "FU"
         case smoke
         
@@ -192,23 +197,15 @@ public struct WX {
         
         /// 30. Haze. "HZ". Has Night icon
         case haze
-        /// 30. Haze. "HZ". Has Night icon
-        case hazeNight
         
         /// 31. Dust. "DU". Has Night icon
         case dust
-        /// 31. Dust. "DU". Has Night icon
-        case dustNight
         
         /// 32. Sand. "SA". Has Night icon
         case sand
-        /// 32. Sand. "SA". Has Night icon
-        case sandNight
         
         /// 33. Mist. "BR". Has Night icon
         case mist
-        /// 33. Mist. "BR". Has Night icon
-        case mistNight
         
         /// 34. Spray. "PY"
         case spray
@@ -305,23 +302,17 @@ public struct WX {
             return "cloud.rain"
         case .lightRain, .drizzle:
             return "cloud.drizzle"
-        case .rainSunshowers:
+        case .rainSunshowers, .drizzleNoCeiling:
             return "cloud.sun.rain"
-        case .rainSunshowersNight:
+        case .rainSunshowersNight, .drizzleNoCeilingNight:
             return "cloud.moon.rain"
         case .smoke:
             return "smoke"
-        case .fog:
+        case .fog, .haze:
             return "cloud.fog"
-        case .haze, .mist:
-            return "sun.haze"
-        case .hazeNight, .mistNight:
-            return "sun.haze.fill"
         case .dust, .sand:
-            return "sun.dust"
-        case .dustNight, .sandNight:
             return "aqi.low"
-        case .spray:
+        case .mist, .spray:
             return "humidity"
         case .windy:
             return "wind"
@@ -446,8 +437,13 @@ public struct WX {
             return needsNightIcon ? .rainSunshowersNight : .rainSunshowers
         }
         
-        // Drizzle
-        if wxString.contains("DZ") { return .drizzle }
+        // Drizzle + Ceiling
+        if wxString.contains("DZ") && ceilingSet.contains(ceilingString) { return .drizzle }
+        
+        // Drizzle + NO Ceiling
+        if wxString.contains("DZ") && noCeilingSet.contains(ceilingString) {
+            return needsNightIcon ? .drizzleNoCeilingNight : .drizzleNoCeiling
+        }
         
         // Smoke
         if wxString.contains("FU") { return .smoke }
@@ -456,24 +452,16 @@ public struct WX {
         if wxString.contains("FG") { return .fog }
         
         // Haze
-        if wxString.contains("HZ") {
-            return needsNightIcon ? .hazeNight : .haze
-        }
+        if wxString.contains("HZ") { return .haze }
 
         // Dust
-        if wxString.contains("DU") {
-            return needsNightIcon ? .dustNight: .dust
-        }
+        if wxString.contains("DU") { return .dust }
         
         // Sand
-        if wxString.contains("SA") {
-            return needsNightIcon ? . sandNight: .sand
-        }
+        if wxString.contains("SA") { return .sand }
         
         // Mist
-        if wxString.contains("BR") {
-            return needsNightIcon ? .mistNight : .mist
-        }
+        if wxString.contains("BR") { return .mist }
         
         // Spray
         if wxString.contains("PY") { return .spray }
