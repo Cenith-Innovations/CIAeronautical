@@ -604,7 +604,7 @@ public struct WX {
         return .none
     }
     
-    static func calculatedFlightCategory(vis: Double?, clouds: [SkyCondition]?) -> (flightCategory: FlightCategory,
+    public static func calculatedFlightCategory(vis: Double?, clouds: [SkyCondition]?) -> (flightCategory: FlightCategory,
                                                                                     visCategory: FlightCategory,
                                                                                     cloudCategory: FlightCategory) {
         

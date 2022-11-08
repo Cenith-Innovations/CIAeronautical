@@ -50,6 +50,8 @@ public struct Forecast: Hashable   {
     public var skyConditions: [SkyCondition]?
     public var turbulenceCondition: [TurbulanceCondition]?
     public var icingConditions: [IcingCondition]?
+    
+    public static let changeIndicatorsDict = ["TEMPO": "Temporary", "BECOMG": "Gradual"]
 }
 
 public struct SkyCondition: Equatable, Hashable {
