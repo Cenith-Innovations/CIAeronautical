@@ -41,7 +41,7 @@ public struct WX {
         let visString = metar.visibilityStatuteMiles == nil ? "Vis NA" : "\(Int(metar.visibilityStatuteMiles!)) SM"
         let visText = Text(visString).foregroundColor(visCategory == .vfr ? Color.primary : visColor)
         
-        var ceilingString = ""
+        var ceilingString = "NA"
         var ceilingCover = ""
         // Ceiling with color
         if let ceiling = WX.lowestCeiling(clouds: metar.skyConditions), let cover = ceiling.skyCover, let base = ceiling.cloudBaseFtAgl {
@@ -73,7 +73,7 @@ public struct WX {
         }
         let ceilingCategory = WX.cloudsFlightCategory(clouds: metar.skyConditions)
         let ceilingColor = WX.colors[ceilingCategory.rawValue]
-        let ceilingText = Text(" \(ceilingString)").foregroundColor(ceilingCategory == .vfr ? Color.primary : ceilingColor)
+        let ceilingText = Text("\(ceilingString)").foregroundColor(ceilingCategory == .vfr ? Color.primary : ceilingColor)
         
         // WxIcon
         if let wind = metar.windSpeedKts {
