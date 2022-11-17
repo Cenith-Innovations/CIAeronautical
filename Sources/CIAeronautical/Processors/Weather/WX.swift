@@ -341,13 +341,21 @@ public struct WX {
         
         var needsNightIcon = true
         if let lat = lat, let long = long {
-            let suntime = SunriseSunset(lat: lat, long: long)
-            let sunrise = suntime.sunRise?.timeIntervalSinceReferenceDate
-            let sunset = suntime.sunSet?.timeIntervalSinceReferenceDate
-            let now = Date().timeIntervalSinceReferenceDate
-            if let sunrise = sunrise, let sunset = sunset, now >= sunrise, now < sunset {
-                needsNightIcon = false
+            let nowDate = Calendar.current.startOfDay(for: Date())
+            // TODO: should sun times be come in order of what's next or just what that day's times were?
+            let suntime = SunriseSunset(lat: lat, long: long, date: nowDate)
+            let sunriseTime = suntime.sunRise?.timeIntervalSinceReferenceDate
+            let sunsetTime = suntime.sunSet?.timeIntervalSinceReferenceDate
+            let now = nowDate.timeIntervalSinceReferenceDate
+            if let rise = sunriseTime, let set = sunsetTime {
+                print("times are not optional sunrise: \(rise) sunset: \(set)")
+                if now >= rise && now < set {
+                    needsNightIcon = false
+                }
             }
+//            if let rise = sunriseTime, let set = sunsetTime, now >= rise, now < set {
+//                needsNightIcon = false
+//            }
         }
         
         let ceilingSet = Set(["BKN", "OVC", "OVX"])

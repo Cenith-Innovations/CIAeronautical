@@ -254,6 +254,8 @@ public struct NOTAM: Decodable, Hashable {
         return .none
     }
     
+    // TODO: try breaking up each word again by replacing non-letters with blank space
+    // TODO: and then checking each sub word since words can be multiple contractions or have typos, then put back together
     private func cleanNotam(notam: String) -> String {
         
         var result = ""
@@ -331,7 +333,14 @@ public struct NOTAM: Decodable, Hashable {
     }
     
     /// CLOSED, UNSERVICEABLE, OUT, OTS
-    public static let redWords: Set<String> = ["CLOSED.", "CLOSED", "UNSERVICEABLE", "UNSERVICEABLE.", "OUT", "OUT OF SERVICE", "OUT OF SERVICE.", "CLSD.", "CLSD", "OTS", "OTS."]
+    public static let redWords: Set<String> = ["CLOSED.", "CLOSED",
+                                               "UNSERVICEABLE", "UNSERVICEABLE.",
+                                               "OUT", "OUT OF SERVICE", "OUT OF SERVICE.",
+                                               "CLSD.", "CLSD",
+                                               "OTS", "OTS.",
+                                               "U/S", "U/S.",
+                                               "UNUSBL", "UNUSBL.",
+                                               "UNMNT", "UNMNT."]
     
     public static let contractionsDict = ["ABN.": "AIRPORT BEACON",
                                    "ABV.": "ABOVE",
@@ -516,6 +525,7 @@ public struct NOTAM: Decodable, Hashable {
                                    "MALSF.": "MEDIUM INTENSITY APPROACH LIGHT SYSTEM WITH SEQUENCED FLASHERS",
                                    "MALSR.": "MEDIUM INTENSITY APPROACH LIGHT SYSTEM WITH RUNWAY ALIGNMENT INDICATOR LIGHTS",
                                    "MAPT.": "MISSED APPROACH POINT",
+                                   "MBST.": "MICROBURST",
                                    "MCA.": "MINIMUM CROSSING ALTITUDE",
                                    "MDA.": "MINIMUM DESCENT ALTITUDE",
                                    "MEA.": "MINIMUM EN ROUTE ALTITUDE",
@@ -657,6 +667,7 @@ public struct NOTAM: Decodable, Hashable {
                                    "TUE.": "TUESDAY",
                                    "TWR.": "AIRPORT CONTROL TOWER",
                                    "TWY.": "TAXIWAY",
+                                   "U/S.": "OUT OF SERVICE",
                                    "UAV.": "UNMANNED AIR VEHICLES",
                                    "UFN.": "UNTIL FURTHER NOTICE",
                                    "UNAVBL.": "UNAVAILABLE",
@@ -682,10 +693,13 @@ public struct NOTAM: Decodable, Hashable {
                                    "WKEND.": "SATURDAY AND SUNDAY",
                                    "WND.": "WIND",
                                    "WPT.": "WAYPOINT",
+                                   "WS.": "WIND SHEAR",
                                    "WSR.": "WET SNOW ON RUNWAY(S)",
                                    "WTR.": "WATER ON RUNWAY(S)",
                                    "WX.": "WEATHER"]
     
+    // added "WS": "WIND SHEAR"
+    // added "MBST": "MICROBURST"
     // removed "VOR": "VHF OMNI-DIRECTIONAL RADIO RANGE"
     // removed "VORTAC": "VOR AND TACAN (COLLOCATED)"
     // removed "TACAN": "TACTICAL AIR NAVIGATION AID (AZIMUTH AND DME)"
