@@ -28,7 +28,8 @@ public struct WX {
         let speed = Int(metar.windSpeedKts ?? 0.0)
         let gustInt = Int(metar.windGustKts ?? 0.0)
         let gustString = gustInt == 0 ? "" : " Gust \(gustInt)"
-        let flightCategory = metar.flightCategory ?? "NA"
+        var flightCategory = metar.flightCategory ?? "NA"
+        if flightCategory.isEmpty { flightCategory = "NA" }
         var windString = "\(direction) at \(speed) kts\(gustString)"
         if speed == 0 { windString = "Winds Calm" }
         
