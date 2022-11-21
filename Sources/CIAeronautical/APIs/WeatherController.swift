@@ -29,7 +29,7 @@ public class WeatherController: ObservableObject {
     @Published public var tafsLastFetchedDate: Date?
     
     /// Publisher that contains the BirdConditions for the input area.
-    @Published public var ahas: [Ahas] = []
+    @Published public var ahas: [String: [Ahas]] = [:]
     
     /// Publisher that contains the AQIs (current observations) for the input ICAO. Current observations only need to be fetched once an hour
     @Published public var airQualities: [String: [AirQuality]] = [:]
@@ -354,6 +354,7 @@ public class WeatherController: ObservableObject {
 
     /// Goes and fetches the current bird condition for an ICAO.
     /// - Parameter icao: Airfield ICAO
+    // TODO: also not used anymore
     public func getBirdConditionCurrentFor(_ icao: String) {
         let area = AHASInputs.hiddenInputs[icao] ?? ""
         self.getBirdCondition(area: area,
@@ -362,6 +363,7 @@ public class WeatherController: ObservableObject {
                               hourZ: Date.getAhasDateComponents().hourZ)
     }
         
+    // TODO: this one isn't used anymore
     private func getBirdCondition(area: String, month: String, day: String, hourZ: String) {
         let url = AhasWebAPI.AhasURL(area: area, month: month, day: day, hour: hourZ, hr12Risk: true)
         let request = URLRequest(url: url)
@@ -370,7 +372,10 @@ public class WeatherController: ObservableObject {
             if let XMLData = data {
                 let birdCondition = AhasParser(data: XMLData).ahas
                 DispatchQueue.main.async {
-                    self?.ahas = birdCondition
+                    // if dateTime minutes is 00 AND current minute is not 0-6
+                    // that means we need to get current AHAS and replace first result with that
+                    
+//                    self?.ahas[icao] = birdCondition
                 }
             } else if let requestError = error {
                 print("Error fetching metar: \(requestError)")
@@ -390,7 +395,8 @@ public class WeatherController: ObservableObject {
         
         for icao in icaos {
             print("fetching Ahas for \(icao)...")
-            getAhasFor(icao: icao)
+            getAhas12HR(icao: icao)
+//            getAhasFor(icao: icao)
         }
     }
     
@@ -411,6 +417,70 @@ public class WeatherController: ObservableObject {
                 let birdCondition = AhasParser(data: XMLData).ahas
                 DispatchQueue.main.async {
                     self?.ahasDict[icao] = birdCondition.first
+                }
+            } else if let requestError = error {
+                print("Error fetching ahas: \(requestError)")
+            } else {
+                print("Unexpected error with request")
+            }}
+        task.resume()
+    }
+    
+    /// Gets next 12 hours of AHAS. Sometimes the current hour result is only for the start of the hour, so we need to get current hour only to get more recent info
+    public func getAhas12HR(icao: String) {
+        
+        let area = AHASInputs.hiddenInputs[icao] ?? ""
+        let url = AhasWebAPI.AhasURL(area: area,
+                                     month: Date.getAhasDateComponents().month,
+                                     day: Date.getAhasDateComponents().day,
+                                     hour: Date.getAhasDateComponents().hourZ,
+                                     hr12Risk: true)
+        
+        let request = URLRequest(url: url)
+        let session = URLSession(configuration: .ephemeral)
+        let task = session.dataTask(with: request) { [weak self] (data, response, error) -> Void in
+            if let XMLData = data {
+                let birdCondition = AhasParser(data: XMLData).ahas
+                DispatchQueue.main.async {
+                    
+                    // if first one's Date minutes is 00 AND current mins is greater than 6, fetch current Ahas only
+                    if let first = birdCondition.first, let firstDate = first.dateTime {
+                        let firstDateComps = Calendar.current.dateComponents([.minute], from: firstDate)
+                        let currentDateComps = Calendar.current.dateComponents([.minute], from: Date())
+                        print("firstDate mins: \(firstDateComps.minute ?? -1) currDate mins: \(currentDateComps.minute ?? -1)")
+                        if let firstMins = firstDateComps.minute, let currMins = currentDateComps.minute, firstMins == 0, currMins > 6 {
+                            self?.getAhasCurrentOnly(icao: icao)
+                        }
+                    }
+                    self?.ahas[icao] = birdCondition
+                }
+            } else if let requestError = error {
+                print("Error fetching ahas: \(requestError)")
+            } else {
+                print("Unexpected error with request")
+            }}
+        task.resume()
+    }
+    
+    /// Only used when 12 hr endpoint isn't returning the most recent hour's current bird risk. Usually only happens mid day for some reason
+    public func getAhasCurrentOnly(icao: String) {
+        
+        let area = AHASInputs.hiddenInputs[icao] ?? ""
+        let url = AhasWebAPI.AhasURL(area: area,
+                                     month: Date.getAhasDateComponents().month,
+                                     day: Date.getAhasDateComponents().day,
+                                     hour: Date.getAhasDateComponents().hourZ,
+                                     hr12Risk: false)
+        
+        let request = URLRequest(url: url)
+        let session = URLSession(configuration: .ephemeral)
+        let task = session.dataTask(with: request) { [weak self] (data, response, error) -> Void in
+            if let XMLData = data {
+                let birdCondition = AhasParser(data: XMLData).ahas
+                DispatchQueue.main.async {
+                    if let risks = self?.ahas[icao], let first = birdCondition.first, !risks.isEmpty {
+                        self?.ahas[icao]?[0] = first
+                    }
                 }
             } else if let requestError = error {
                 print("Error fetching ahas: \(requestError)")
