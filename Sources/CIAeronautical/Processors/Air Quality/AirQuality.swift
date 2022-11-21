@@ -147,10 +147,10 @@ public struct AirQuality: Decodable, Hashable, Comparable {
             return false
         }
         
-        if forecastDayString == currentDayString {
-            print("No refresh: forecastDayString = \(forecastDayString), currentDayString = \(currentDayString)")
-            return false
-        }
+//        if forecastDayString == currentDayString {
+//            print("No refresh: forecastDayString = \(forecastDayString), currentDayString = \(currentDayString)")
+//            return false
+//        }
         
         return true
     }
