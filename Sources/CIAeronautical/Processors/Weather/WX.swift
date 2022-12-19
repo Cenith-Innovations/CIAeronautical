@@ -157,7 +157,7 @@ public struct WX {
         
         // Wind
         var direction = String(format:  "%03d", Int(metar.windDirDegrees ?? 0.0)) + "°"
-        if let rawText = metar.rawText, rawText.uppercased().contains("VRB") { direction = "VRB" }
+        if let rawText = metar.rawText, rawText.uppercased().contains("VRB") { direction = "VAR" }
         
         let speed = Int(metar.windSpeedKts ?? 0.0)
         let gustInt = Int(metar.windGustKts ?? 0.0)
@@ -384,6 +384,9 @@ public struct WX {
         
         case none
     }
+    
+    public static let filledIcons = ["moon": "moon.fill", "sun.max": "sun.max.fill", "cloud.moon": "cloud.moon.fill",
+                                     "cloud": "cloud.fill", "cloud.sun": "cloud.sun.fill", "humidity": "humidity.fill", "cloud.fog": "cloud.fog.fill", "smoke": "smoke.fill", "cloud.moon.rain": "cloud.moon.rain.fill", "cloud.sun.rain": "cloud.sun.rain.fill"]
 
     /// Returns String for Image name associated with passed in WxCondition
     public static func iconForWx(wxCondition: WxCondition) -> String {
@@ -804,10 +807,10 @@ public struct WX {
         // nil
         var dir = "-"
         
+        // TODO: also check if word that contains VRB is the first wind string (KT) we find?
         // VRB
         if let rawText = rawText, rawText.uppercased().contains("VRB") {
-            dir = "VRB"
-            return dir
+            return "VAR"
         }
         
         if let varWinds = WX.getVariableWind(rawText: rawText, windDir: windDir) {
@@ -857,8 +860,7 @@ public struct WX {
                     // make sure its not the ICAO that has KT in it
                     if newWord.count > 4 {
                        if newWord.contains("VRB") {
-                           dir = "VRB"
-                           return "\(dir) \(speed)\(gust)"
+                           return "VAR at \(speed)\(gust)"
                        } else {
                            break
                        }
@@ -868,7 +870,7 @@ public struct WX {
             
             // if there's no wind string at all, its VRB
             if !containsKT {
-                return "VRB \(speed)\(gust)"
+                return "VAR at \(speed)\(gust)"
             }
         }
         
@@ -889,7 +891,7 @@ public struct WX {
             }
         }
         
-        return "\(dir) \(speed)\(gust)"
+        return "\(dir)° at \(speed)\(gust)"
     }
     
     public static func containsChange(word: String) -> Bool {
