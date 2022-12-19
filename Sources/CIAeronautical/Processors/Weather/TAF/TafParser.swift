@@ -132,7 +132,8 @@ public class TafParser: NSObject, XMLParserDelegate {
     public func parserDidEndDocument(_ parser: XMLParser) {
         if let resultTafs = results {
             for taf in resultTafs {
-                let wx = Taf(rawText: taf[tafField(.rawText)],
+                
+                var wx = Taf(rawText: taf[tafField(.rawText)],
                              stationId: taf[tafField(.stationId)],
                              issueTime: taf[tafField(.issueTime)].weatherStringToDate,
                              bulletinTime: taf[tafField(.bulletinTime)].weatherStringToDate,
@@ -148,6 +149,26 @@ public class TafParser: NSObject, XMLParserDelegate {
                              surfaceTempC: taf[tafField(.surfcaeTempC)].toDouble,
                              maxTempC: taf[tafField(.maxTempC)].toDouble,
                              minTempC: taf[tafField(.minTempC)].toDouble)
+                
+                // give each Forecast its rawText
+                if let forecasts = forecastsDict[taf[tafField(.stationId)] ?? ""], let rawText = wx.rawText {
+                    var newForecasts = [Forecast]()
+                    let rawTexts = WX.forecastRawTexts(rawText: rawText)
+                    var i = 0
+                    let rawTextsCount = rawTexts.count
+                    let forecastsCount = forecasts.count
+                    // make sure we have equal amount of rawTexts and forecasts so they match
+                    if rawTextsCount == forecastsCount {
+                        while i < forecastsCount {
+                            var forecastToAdd = forecasts[i]
+                            forecastToAdd.rawText = rawTexts[i]
+                            newForecasts.append(forecastToAdd)
+                            i += 1
+                        }
+                    }
+                    wx.forecast = newForecasts
+                }
+                                
                 tafs.append(wx)
             }
         }

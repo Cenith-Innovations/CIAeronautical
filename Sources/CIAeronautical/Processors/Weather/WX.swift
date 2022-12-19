@@ -9,6 +9,140 @@ import SwiftUI
 
 public struct WX {
     
+    public struct Condition {
+        // TODO: any icon that can have a .fill version should use that if using icon for Weather container
+        public let name: String
+        public let color: Color
+        public let keyword: String
+        public let iconName: String
+        /// Not all Conditions will have a different iconFilledName
+        public let iconFilledName: String
+        public let iconNightName: String
+    }
+    
+    public static let weatherGroups = ["-": "Light",
+                                "+": "Heavy",
+                                "VC": "Vicinity",
+                                "DSNT": "Distant",
+                                "BC": "Patchy",
+                                "BL": "Blowing",
+                                "DR": "Drifting",
+                                "FZ": "Freezing",
+                                "MI": "Shallow",
+                                "PR": "Partial",
+                                "SH": "Showers",
+                                "TS": "Thunderstorms",
+                                "DZ": "Drizzle",
+                                "GR": "Hail",
+                                "GS": "Small Hail",
+                                "IC": "Ice Crystals",
+                                "PL": "Ice Pellets",
+                                "RA": "Rain",
+                                "SG": "Snow Grains",
+                                "SN": "Snow",
+                                "UP": "Unknown Precipitation",
+                                "BR": "Mist",
+                                "DU": "Widespread Dust",
+                                "FG": "Fog",
+                                "FU": "Smoke",
+                                "HZ": "Haze",
+                                "PY": "Spray",
+                                "SA": "Sand",
+                                "VA": "Volcanic Ash",
+                                "DS": "Dust Storm",
+                                "FC": "Funnel Clouds",
+                                "PO": "Dust / Sand Whirls",
+                                "SQ": "Squalls",
+                                "SS": "Sandstorm"]
+    
+    public static func cleanWx(word: String) -> String? {
+        
+        guard word.count % 2 == 0 else { return nil }
+        
+        // every 2 characters, replace them with their translation
+        var result = ""
+        let words = Array(word)
+        let count = words.count
+        var i = 0
+        
+        while i < count && (i+1) < count {
+            let currAbrv = "\(words[i])\(words[i+1])"
+            if let newWord = WX.weatherGroups[currAbrv] {
+                let comma = count - 2 == i ? "" : " "
+                result += newWord + comma
+            }
+            i += 2
+        }
+        
+        // Showers goes after precipitation
+        if result.contains("Showers") {
+            print("Found Showers")
+            let precipitation = Set(["Rain", "Snow"])
+            var final = Array(result.split(separator: " "))
+            let finalCount = final.count
+            for i in 0..<finalCount {
+                if final[i] == "Showers" && (i+1) < finalCount {
+                    let nextWord = final[i+1]
+                    if precipitation.contains(String(nextWord)) {
+                        final[i] = nextWord
+                        final[i+1] = "Showers"
+                    }
+                }
+            }
+            return String(final.joined(separator: " "))
+        }
+            
+        return result
+    }
+
+
+    public static func cleanWxString(wx: String?) -> String? {
+        
+        guard let wx = wx, !wx.isEmpty else { return nil }
+        
+        var result = ""
+        
+        let words = Array(wx.split(separator: " "))
+        let count = words.count
+        
+        for i in 0..<count {
+            
+            var intensity = ""
+            var wordArray = Array(words[i])
+            let first = wordArray[0]
+            
+            // Heavy
+            if first == "+" {
+                intensity += "Heavy "
+                wordArray.remove(at: 0)
+            }
+            
+            // Light
+            else if first == "-" {
+                intensity += "Light "
+                wordArray.remove(at: 0)
+            }
+            
+            // TODO: remove "DSNT" the same way "-" and "+" are removed?
+            // TODO: "+FC" is Tornado instead of Heavy Funnel Clouds
+                    
+            let comma = count - 1 == i ? "" : ", "
+            guard let cleanWx = cleanWx(word: String(wordArray)) else { return nil }
+            result += intensity + cleanWx + comma
+        }
+        
+        return result
+    }
+    
+    /// "KBAB"
+    public static let kbabIcao = "KBAB"
+
+    /// KBAB Latitude. 39.1361
+    public static let kbabLat = 39.1361
+    
+    /// KBAB Longitude. -121.436586
+    public static let kbabLong = -121.436586
+    
     public static func summaryString(metar: Metar?, lat: Double?, long: Double?) -> some View {
                 
         var wxIcon = WX.unknownWxIcon
@@ -636,5 +770,194 @@ public struct WX {
         
         // NA
         return (.none, .none, .none)
+    }
+    
+    // TODO: needs to first look for first wind string (has KT at the end), then check if the next word is exactly 7 chars long with V in the middle
+    /// Returns the high and low ends of a Metar's wind direction. If no variable wind, returns wind direction as both low and high. Returns nil if no wind direction
+    public static func getVariableWind(rawText: String?, windDir: Double? = nil) -> (low: Int, high: Int)? {
+        
+        guard let rawText = rawText, let windDir = windDir else { return nil }
+        
+        let words = rawText.split(separator: " ")
+        
+        // return low and high ends of wind variation if it exists
+        for word in words {
+            if word.count == 7 {
+                let wordArray = Array(word)
+                if wordArray[3].uppercased() == "V" {
+                    let low = Int("\(wordArray[0])\(wordArray[1])\(wordArray[2])")
+                    let high = Int("\(wordArray[4])\(wordArray[5])\(wordArray[6])")
+                    guard let low = low, let high = high else { return nil }
+                    return (low, high)
+                }
+            }
+        }
+         
+        // if we do not find variable wind, return wind direction as high and low
+        let result = Int(windDir)
+        return (result, result)
+    }
+    
+    /// Returns wind direction as String. Returns variable wind if applicable. Examples: "170°", "170-200°"", "VRB", "-°"
+    public static func windDirectionString(rawText: String?, windDir: Double?) -> String {
+        
+        // nil
+        var dir = "-"
+        
+        // VRB
+        if let rawText = rawText, rawText.uppercased().contains("VRB") {
+            dir = "VRB"
+            return dir
+        }
+        
+        if let varWinds = WX.getVariableWind(rawText: rawText, windDir: windDir) {
+            
+            let low = String(format: "%03d", varWinds.low)
+            let high = String(format: "%03d", varWinds.high)
+            
+            // Regular
+            if low == high {
+                dir = "\(low)°"
+            }
+            
+            // Variable Range
+            else {
+                dir = "\(varWinds.low)°-\(varWinds.high)°"
+            }
+        }
+        
+        return dir
+    }
+    
+//    /// Returns Optional Tuple containing high/low ends of wind direction if variable. Otherwise returns wind direction or nil if no wind direction or rawText exists
+//    public static func variableWinds(rawText: String?, windDir: Double?) -> (low: Int, high: Int)? {
+//        return WX.getVariableWind(rawText: rawText, windDir: windDirDegrees)
+//    }
+    
+    /// Returns wind direction, speed, and gust as a single String. Examples: "180 12 G15", "170-200 6 G5", "VRB 6", "CALM", "-"
+    public static func windPanelString(windDir: Double?, windSpeed: Double?, windGust: Double?, rawText: String?) -> String {
+        
+        var speed = "-"
+        if let windSpeed = windSpeed { speed = "\(Int(windSpeed))" }
+        
+        var gust = ""
+        if let windGust = windGust, windGust != 0.0 { gust = " G\(Int(windGust))" }
+        
+        // nil
+        var dir = "-"
+        
+        // VRB - only check first wind string (contains "KT") since Forecast rawTexts can have a second wind string
+        if let rawText = rawText {
+            let words = rawText.split(separator: " ")
+            var containsKT = false
+            for word in words {
+                let newWord = word.uppercased()
+                if newWord.contains("KT") {
+                    containsKT = true
+                    // make sure its not the ICAO that has KT in it
+                    if newWord.count > 4 {
+                       if newWord.contains("VRB") {
+                           dir = "VRB"
+                           return "\(dir) \(speed)\(gust)"
+                       } else {
+                           break
+                       }
+                   }
+                }
+            }
+            
+            // if there's no wind string at all, its VRB
+            if !containsKT {
+                return "VRB \(speed)\(gust)"
+            }
+        }
+        
+        // Variable Winds
+        if let varWinds = WX.getVariableWind(rawText: rawText, windDir: windDir) {
+            
+            let low = String(format: "%03d", varWinds.low)
+            let high = String(format: "%03d", varWinds.high)
+            
+            // Regular
+            if low == high {
+                dir = "\(low)"
+            }
+            
+            // Variable Range
+            else {
+                dir = "\(varWinds.low)°-\(varWinds.high)°"
+            }
+        }
+        
+        return "\(dir) \(speed)\(gust)"
+    }
+    
+    public static func containsChange(word: String) -> Bool {
+        
+        let wordCount = word.count
+        // make sure its 2 or more characters long first
+        guard wordCount >= 2 else { return false }
+        
+        // first 5 are TEMPO or BECMG
+        if wordCount >= 5 {
+            if word == "TEMPO" || word == "BECMG" { return true }
+        }
+        
+        // first 4 are PROB
+        if wordCount >= 4 {
+            if containsProb(word: word) { return true }
+        }
+        
+        // first 2 are FM
+        let wordArray = Array(word)
+        if wordArray[0] == "F" && wordArray[1] == "M" { return true }
+        
+        return false
+    }
+
+    public static func containsProb(word: String) -> Bool {
+        guard word.count >= 4 else { return false }
+        let wordArray = Array(word)
+        if wordArray[0] == "P" && wordArray[1] == "R" && wordArray[2] == "O" && wordArray[3] == "B" { return true }
+        return false
+    }
+
+    public static func forecastRawTexts(rawText: String?) -> [String] {
+        
+        guard let rawText = rawText else { return [] }
+        
+        var forecasts = [String]()
+        var currText = ""
+        
+        let words = rawText.split(separator: " ")
+        
+    //    let breaks = Set(["PROB", "TEMPO", "BECMG", "FM"])
+        let count = words.count
+        var i = 0
+        while i < count {
+            let newWord = "\(words[i])"
+            if containsChange(word: newWord) {
+    //            print("Break: \(newWord)")
+                
+                // if current contains Prob AND next word contains change, skip Prob
+                if containsProb(word: newWord) && (i+1) < count {
+                    // check next word
+    //                print("found PROB, next word: \(words[i+1])")
+                    forecasts.append(currText)
+                    currText = "\(words[i]) \(words[i+1]) "
+                    i += 2
+                    continue
+                }
+                
+                forecasts.append(currText)
+                currText = ""
+            }
+            currText += "\(words[i]) "
+            i += 1
+        }
+        
+        forecasts.append(currText)
+
+        return forecasts
     }
 }

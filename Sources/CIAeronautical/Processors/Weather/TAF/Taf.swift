@@ -51,7 +51,19 @@ public struct Forecast: Hashable   {
     public var turbulenceCondition: [TurbulanceCondition]?
     public var icingConditions: [IcingCondition]?
     
-    public static let changeIndicatorsDict = ["TEMPO": "Temporary", "BECOMG": "Gradual"]
+    /// TAF.rawText is broken up and each part is assigned to its respective Forecast based on index order
+    public var rawText: String?
+    
+    public static let changeIndicatorsDict = ["TEMPO": "Temporary", "BECMG": "Gradual"]
+    
+    public static var DummySkyConditions: [SkyCondition] = [
+        SkyCondition(skyCover: "FEW", cloudBaseFtAgl: 6000),
+        SkyCondition(skyCover: "OVC", cloudBaseFtAgl: 7000)
+    ]
+    
+    public static let dummyForecast = Forecast(forecastTimeFrom: Date(), forecastTimeTo: Date(), changeIndicator: "TEMPO", timeBecoming: Date(), probability: 40, windDirDegrees: 170, windSpeedKts: 10, windGustKts: 15, windShearHeightFtAGL: nil, windShearDirDegrees: nil, windShearSpeedKts: nil, visibilityStatuteMiles: 5, altimeterInHg: 30, verticleVisFt: 100, wxString: "-RA", notDecoded: nil, skyConditions: Forecast.DummySkyConditions, turbulenceCondition: [], icingConditions: [], rawText: "BECMG 1216/1217 32009KT 9999 FEW040 QNH2993INS WND VRB06KT AFT 1302 TX10/1222Z TN01/1311Z")
+    
+    public static let dummyTAF = Taf(id: UUID(), rawText: "", stationId: "KBAB", issueTime: Date(), bulletinTime: Date(), validTimeFrom: Date(), validTimeTo: Date(), remarks: "", latitude: 30.0, longitude: 120.0, elevationM: 20.0, forecast: [Forecast.dummyForecast, Forecast.dummyForecast], temperature: 30.6, validTime: Date(), surfaceTempC: 50.2, maxTempC: 55.2, minTempC: 54.1)
 }
 
 public struct SkyCondition: Equatable, Hashable {
