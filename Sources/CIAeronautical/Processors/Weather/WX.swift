@@ -42,7 +42,7 @@ public struct WX {
                                 "SN": "Snow",
                                 "UP": "Unknown Precipitation",
                                 "BR": "Mist",
-                                "DU": "Widespread Dust",
+                                "DU": "Dust",
                                 "FG": "Fog",
                                 "FU": "Smoke",
                                 "HZ": "Haze",
