@@ -386,7 +386,7 @@ public struct WX {
     }
     
     public static let filledIcons = ["moon": "moon.fill", "sun.max": "sun.max.fill", "cloud.moon": "cloud.moon.fill",
-                                     "cloud": "cloud.fill", "cloud.sun": "cloud.sun.fill", "humidity": "humidity.fill", "cloud.fog": "cloud.fog.fill", "smoke": "smoke.fill", "cloud.moon.rain": "cloud.moon.rain.fill", "cloud.sun.rain": "cloud.sun.rain.fill"]
+                                     "cloud": "cloud.fill", "cloud.sun": "cloud.sun.fill", "humidity": "humidity.fill", "cloud.fog": "cloud.fog.fill", "smoke": "smoke.fill", "cloud.moon.rain": "cloud.moon.rain.fill", "cloud.sun.rain": "cloud.sun.rain.fill", "cloud.drizzle": "cloud.drizzle.fill", "cloud.rain": "cloud.rain.fill"]
 
     /// Returns String for Image name associated with passed in WxCondition
     public static func iconForWx(wxCondition: WxCondition) -> String {
