@@ -15,16 +15,16 @@ public struct Metar: Hashable, Loopable {
         SkyCondition(skyCover: "OVC", cloudBaseFtAgl: 700)
     ]
     
-    public static var DummyMETAR = Metar(rawText: "KBAB 130158Z AUTO 17010KT 10SM CLR 17/M01 A3008 RMK AO2 SLP189 T01661006 $",
+    public static var DummyMETAR = Metar(rawText: "KBAB 130158Z AUTO 18010KT 10SM CLR 17/M01 A3008 RMK AO2 SLP189 T01661006 $",
                                          stationId: "KBAB",
                                          observationTime: Date(),
                                          latitude: 45.0,
                                          longitude: -121.0,
                                          tempC: 23,
                                          dewPointC: 18,
-                                         windDirDegrees: 170.0,
-                                         windSpeedKts: 11,
-                                         windGustKts: 15,
+                                         windDirDegrees: 180.0,
+                                         windSpeedKts: 10,
+                                         windGustKts: 5,
                                          visibilityStatuteMiles: 10,
                                          altimeterInHg: 30.04,
                                          seaLevelPressureMb: 0,

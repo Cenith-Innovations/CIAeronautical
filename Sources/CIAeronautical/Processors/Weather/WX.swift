@@ -783,6 +783,7 @@ public struct WX {
         
         let words = rawText.split(separator: " ")
         
+        // TODO: "V" String needs to come directly after first "KT" String
         // return low and high ends of wind variation if it exists
         for word in words {
             if word.count == 7 {
@@ -882,7 +883,7 @@ public struct WX {
             
             // Regular
             if low == high {
-                dir = "\(low)"
+                dir = "\(low)°"
             }
             
             // Variable Range
@@ -891,7 +892,7 @@ public struct WX {
             }
         }
         
-        return "\(dir)° at \(speed)\(gust)"
+        return "\(dir) at \(speed)\(gust)"
     }
     
     public static func containsChange(word: String) -> Bool {

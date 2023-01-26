@@ -221,6 +221,26 @@ public struct NOTAM: Decodable, Hashable {
     
     // MARK: - Helpers
     
+    public var isActive: Bool {
+
+        let startDate = effectiveDate ?? .distantPast
+        let endDate = expirationDate ?? .distantFuture
+        
+        // Future (if startDate is greater than right now)
+        if startDate.timeIntervalSinceReferenceDate > Date().timeIntervalSinceReferenceDate {
+            return false
+        }
+        
+        // Expired (if endDate is less than right now)
+        else if endDate.timeIntervalSinceReferenceDate < Date().timeIntervalSinceReferenceDate {
+            return false
+        }
+        
+        // Current/Active
+                
+        return true
+    }
+    
     public func qCode(icaoMessage: String?) -> NotamType {
         
         // type is unknown if we can't even get icaoMessage, which contains the Q Code
