@@ -50,7 +50,8 @@ public struct Metar: Hashable, Loopable {
         hasher.combine(stationId)
     }
     
-    public init(rawText: String, stationId: String, observationTime: Date?, latitude: Double, longitude: Double, tempC: Double, dewPointC: Double, windDirDegrees: Double, windSpeedKts: Double, windGustKts: Double, visibilityStatuteMiles: Double, altimeterInHg: Double, seaLevelPressureMb: Double, qualityControlFlags: String, wxString: String?, skyConditions: [SkyCondition]?, flightCategory: String, threeHrPressureTendencyMb: String?, maxTempPastSixHoursC: Double, minTempPastSixHoursC: Double, maxTemp24HrC: Double, minTemp24HrC: Double, precipIn: Double, precipLast3HoursIn: Double, precipLast6HoursIn: Double, precipLast24HoursIn: Double, snowIn: Double, vertVisFt: Double, metarType: String?, elevationM: Double) {
+    // TODO: why were these not taking in optional values?
+    public init(rawText: String, stationId: String, observationTime: Date?, latitude: Double, longitude: Double, tempC: Double, dewPointC: Double, windDirDegrees: Double?, windSpeedKts: Double?, windGustKts: Double?, visibilityStatuteMiles: Double, altimeterInHg: Double, seaLevelPressureMb: Double, qualityControlFlags: String, wxString: String?, skyConditions: [SkyCondition]?, flightCategory: String, threeHrPressureTendencyMb: String?, maxTempPastSixHoursC: Double, minTempPastSixHoursC: Double, maxTemp24HrC: Double, minTemp24HrC: Double, precipIn: Double, precipLast3HoursIn: Double, precipLast6HoursIn: Double, precipLast24HoursIn: Double, snowIn: Double, vertVisFt: Double, metarType: String?, elevationM: Double) {
         self.rawText = rawText
         self.stationId = stationId
         self.observationTime = observationTime

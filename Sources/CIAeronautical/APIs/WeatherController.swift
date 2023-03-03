@@ -15,10 +15,16 @@ import Combine
 
 public class WeatherController: ObservableObject {
 
+    /// Notams for DINS endpoint. Unused now
     @Published public var notams: [String: [Notam]] = [:]
     @Published public var notamsLastFetchedDate: Date?
     
-    @Published public var notamsFaa: [String: [NOTAM]] = [:]
+//    @Published public var notamsFaa: [String: [NOTAM]] = [:]
+    /// Publisher that holds NOTAMS for all icaos (FAA ones, not DINS)
+    @Published public var notamsFaa = [String: [NOTAM]]()
+    @Published public var notamsFaaLastFetchedDate: Date? { didSet { print("updated last fetched date") } }
+    @Published public var isLoadingAllNotamsFaa = false
+    @Published public var notamsFaaAreCurrent = false
     
     /// Publisher that holds Metars corresponding to AirfieldIcaos
     @Published public var metars: [String: Metar] = [:]
@@ -179,6 +185,7 @@ public class WeatherController: ObservableObject {
     public func getAllWeather(icaos: [String]) {
         getAllMetars(icaos: icaos)
         getAllTafs(icaos: icaos)
+        getAllNotamsFAA(icaos: icaos)
     }
     
     // MARK: METAR
@@ -249,29 +256,44 @@ public class WeatherController: ObservableObject {
     
     // MARK: NOTAM
     
-    public func getNotamFAA(icao: String) {
-        
-        // TODO: move this logic somewhere else? (make computed property?)
-        if let lastDate = notamsFaa[icao]?.first?.dateFetched {
-            print("\(icao) dateFetched: \(lastDate)")
+    /// Checks notamsLastFetchedDate to see if we can make another request to get newest notamsFaa
+    public var notamsFaaNeedRefresh: Bool {
+        if let lastDate = notamsFaaLastFetchedDate {
+            print("notamsFaaLastFetchedDate: \(lastDate)")
             let diff = Date().timeIntervalSinceReferenceDate - lastDate.timeIntervalSinceReferenceDate
             print("notams diff = \(diff)")
             if diff < 120 {
                 print("fetched notamsFaa less than 2 mins ago")
-                return
+                return false
             }
-            print("its been longer than 2 minutes since fetching \(icao) notams")
+            print("its been longer than 2 minutes since fetching this notamsFaa")
+        }
+        
+        return true
+    }
+    
+    /// Returns a dictionary of all NOTAMS for input ICAOS. Also takes in offset and total NOTAMS count integers and list of previous NOTAMS to recursively chain together next
+    /// page's worth of NOTAMS since FAA endpoint only returns 30 results at a time. This is a backup for our server's NOTAMS endpoint.
+    public func getAllNotamsFAA(icaos: [String], offset: Int = 0, prevNotams: [NOTAM] = [], total: Int = 0) {
+        print(#function)
+        guard notamsFaaNeedRefresh else {
+            print("returning early since notamsFaa are less than 2 mins old")
+            return
         }
         
         let url = URL(string: "https://notams.aim.faa.gov/notamSearch/search")!
         var request = URLRequest(url: url)
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.httpMethod = "POST"
-        
+        let icaosString = icaos.joined(separator: ",")
         // TODO: only send relevant parameters?
-        let postData = "searchType=0&designatorsForLocation=\(icao)&designatorForAccountable=&latDegrees=&latMinutes=0&latSeconds=0&longDegrees=&longMinutes=0&longSeconds=0&radius=10&sortColumns=5+false&sortDirection=true&designatorForNotamNumberSearch=&notamNumber=&radiusSearchOnDesignator=false&radiusSearchDesignator=&latitudeDirection=N&longitudeDirection=W&freeFormText=&flightPathText=&flightPathDivertAirfields=&flightPathBuffer=4&flightPathIncludeNavaids=true&flightPathIncludeArtcc=false&flightPathIncludeTfr=true&flightPathIncludeRegulatory=false&flightPathResultsType=All+NOTAMs&archiveDate=&archiveDesignator=offset=0&filters=Keywords:+Aerodrome-AD~Aerodrome-APRON~Aerodrome-CONSTRUCTION~Aerodrome-RWY~Aerodrome-SVC~Aerodrome-TWY~Airspace-AIRSPACE~Airspace-CARF~Airspace-TFR~Chart-CHART~Communication-AD~Communication-COM~GPS-GPS~International-INTERNATIONAL~Military-MILITARY~Navaid-AD~Navaid-AIRSPACE~Navaid-COM~Navaid-NAV~Navaid-RWY~Navaid-SVC~Obstruction-OBST~Other-(O)~Procedure-FDC/Other~Procedure-IAP~Procedure-ODP~Procedure-SID~Procedure-SPECIAL~Procedure-STAR~Procedure-VFP~Route-ROUTE~Security-SECURITY~Services-SVC"
+        // TODO: strip first "K" from each icao and use that for search string so we can get back some nearby locations too
+        let postData = "searchType=0&designatorsForLocation=\(icaosString)&designatorForAccountable=&latDegrees=&latMinutes=0&latSeconds=0&longDegrees=&longMinutes=0&longSeconds=0&radius=10&sortColumns=5+false&sortDirection=true&designatorForNotamNumberSearch=&notamNumber=&radiusSearchOnDesignator=false&radiusSearchDesignator=&latitudeDirection=N&longitudeDirection=W&freeFormText=&flightPathText=&flightPathDivertAirfields=&flightPathBuffer=4&flightPathIncludeNavaids=true&flightPathIncludeArtcc=false&flightPathIncludeTfr=true&flightPathIncludeRegulatory=false&flightPathResultsType=All+NOTAMs&archiveDate=&archiveDesignator=&offset=\(offset)&filters=Keywords:+Aerodrome-AD~Aerodrome-APRON~Aerodrome-CONSTRUCTION~Aerodrome-RWY~Aerodrome-SVC~Aerodrome-TWY~Airspace-AIRSPACE~Airspace-CARF~Airspace-TFR~Chart-CHART~Communication-AD~Communication-COM~GPS-GPS~International-INTERNATIONAL~Military-MILITARY~Navaid-AD~Navaid-AIRSPACE~Navaid-COM~Navaid-NAV~Navaid-RWY~Navaid-SVC~Obstruction-OBST~Other-(O)~Procedure-FDC/Other~Procedure-IAP~Procedure-ODP~Procedure-SID~Procedure-SPECIAL~Procedure-STAR~Procedure-VFP~Route-ROUTE~Security-SECURITY~Services-SVC"
         
         request.httpBody = postData.data(using: .utf8)
+        
+        // dont set to true if already true to avoid redundant ui redraws
+        if !self.isLoadingAllNotamsFaa { self.isLoadingAllNotamsFaa = true }
         
         let task = URLSession.shared.dataTask(with: request) { [weak self] (data, _, error) in
             
@@ -281,15 +303,39 @@ public class WeatherController: ObservableObject {
                     do {
                         let notamsResponse = try JSONDecoder().decode(NotamsResponse.self, from: data)
                         
-                        // TODO: check total count to know if we need to do one extra request f
-                        if let notams = notamsResponse.notamList {
-                            self?.notamsFaa[icao] = notams
+                        if let notamList = notamsResponse.notamList, let total = notamsResponse.totalNotamCount {
+                            let newOffset = offset + 30
+                            if newOffset > total {
+                                let allNotams = notamList + prevNotams
+                                var tempNotams = [String: [NOTAM]]()
+                                for notam in allNotams {
+                                    guard let icao = notam.icaoId else { continue }
+                                    if tempNotams[icao] == nil {
+                                        tempNotams[icao] = [notam]
+                                    } else {
+                                        tempNotams[icao]!.append(notam)
+                                    }
+                                }
+                                
+                                self?.notamsFaa = tempNotams
+                                self?.isLoadingAllNotamsFaa = false
+                                self?.notamsFaaLastFetchedDate = Date()
+                                print("got all notams")
+                                return
+                            } else {
+                                self?.getAllNotamsFAA(icaos: icaos,
+                                                      offset: newOffset,
+                                                      prevNotams: notamList + prevNotams,
+                                                      total: total)
+                            }
                         }
                     } catch {
                         print("error decoding notam faa")
+                        self?.isLoadingAllNotamsFaa = false
                     }
                 } else {
                     print("no data notams faa")
+                    self?.isLoadingAllNotamsFaa = false
                 }
             }
         }
@@ -343,7 +389,6 @@ public class WeatherController: ObservableObject {
                     tempNotams[icao] = notams
                 }
                 self?.notams = tempNotams
-                self?.notamsLastFetchedDate = Date()
             }
         }
         task.resume()
