@@ -35,4 +35,11 @@ public extension DateFormatter {
         formatter.dateFormat = "MM/dd/yyyy HHmm"
         return formatter
     }()
+    
+    /// "1952". Local timezone
+    static let localHourMinsTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HHmm"
+        return formatter
+    }()
 }

@@ -386,7 +386,7 @@ public struct WX {
     }
     
     public static let filledIcons = ["moon": "moon.fill", "sun.max": "sun.max.fill", "cloud.moon": "cloud.moon.fill",
-                                     "cloud": "cloud.fill", "cloud.sun": "cloud.sun.fill", "humidity": "humidity.fill", "cloud.fog": "cloud.fog.fill", "smoke": "smoke.fill", "cloud.moon.rain": "cloud.moon.rain.fill", "cloud.sun.rain": "cloud.sun.rain.fill", "cloud.drizzle": "cloud.drizzle.fill", "cloud.rain": "cloud.rain.fill"]
+                                     "cloud": "cloud.fill", "cloud.sun": "cloud.sun.fill", "humidity": "humidity.fill", "cloud.fog": "cloud.fog.fill", "smoke": "smoke.fill", "cloud.moon.rain": "cloud.moon.rain.fill", "cloud.sun.rain": "cloud.sun.rain.fill", "cloud.drizzle": "cloud.drizzle.fill", "cloud.rain": "cloud.rain.fill", "cloud.bolt.rain": "cloud.bolt.rain.fill", "cloud.bolt": "cloud.bolt.fill"]
 
     /// Returns String for Image name associated with passed in WxCondition
     public static func iconForWx(wxCondition: WxCondition) -> String {
@@ -962,5 +962,89 @@ public struct WX {
         forecasts.append(currText)
 
         return forecasts
+    }
+    
+    // MARK: - Forecast Helpers
+    
+    /// Returns tuple containing icon name and String for weather or clouds.
+    public static func weatherIconNameAndClouds(forecast: Forecast, lat: Double?, long: Double?) -> (iconName: String, wxOrClouds: String) {
+        
+        let ceiling =  WX.lowestCeiling(clouds: forecast.skyConditions)
+        let cloud = forecast.skyConditions?.first
+        let firstCloud = cloud?.skyCover ?? ""
+        let wx = WX.getWx(wxString: forecast.wxString ?? "",
+                          ceilingString: ceiling?.skyCover ?? firstCloud,
+                          wind: forecast.windSpeedKts ?? 0.0,
+                          lat: lat,
+                          long: long)
+        
+        // wx, then ceiling, then first cloud
+        
+        let cloudOrCeiling = ceiling ?? cloud
+        var cloudHeight = ""
+        if let height = cloudOrCeiling?.cloudBaseFtAgl, height != 0 {
+            cloudHeight = " \(Int(height))\'"
+        }
+        
+        // Cloud (ex: "FEW 1000")
+        var wxOrCloud = "\(cloudOrCeiling?.skyCover ?? "NA")\(cloudHeight)"
+                
+        // WX (if any)
+        if let weatherString = forecast.wxString, !weatherString.isEmpty {
+            let cleanWx = WX.cleanWxString(wx: weatherString) ?? weatherString
+            if cleanWx.count > 11 {
+                wxOrCloud = weatherString
+            } else {
+                wxOrCloud = cleanWx
+            }
+//            wxOrCloud = WX.cleanWxString(wx: weatherString) ?? weatherString
+        }
+        
+        // Visibility
+        var vis = "?SM"
+        if let visibility = forecast.visibilityStatuteMiles {
+            vis = "\(Int(visibility))SM"
+        }
+        
+        let cloudsAndVis = "\(wxOrCloud) \(vis)"
+        
+        // Icon
+        var iconName = WX.iconForWx(wxCondition: wx)
+        if let filledIconName = WX.filledIcons[iconName] {
+            iconName = filledIconName
+        }
+        
+        return (iconName, cloudsAndVis)
+    }
+    
+    // MARK: - METAR Helpers
+    
+    // TODO: add default parameter so this can also just return how many minutes ago without including observation time?
+    /// Returns METAR observation time (local timezone) and how many minutes old a METAR is along with a color. Ex" "1450L (32m)"
+    public static func metarTime(metar: Metar?) -> (timeString: String, color: Color) {
+        var timeString = "NA"
+        var color = Color.gray
+        
+        guard let time = metar?.observationTime else { return (timeString, color) }
+        
+        let date = DateFormatter.localHourMinsTimeFormatter.string(from: time) + "L"
+        let now = Date()
+        let seconds = now.timeIntervalSinceReferenceDate - time.timeIntervalSinceReferenceDate
+        let minutes = Int(seconds / 60)
+        
+        switch minutes {
+        case 0..<5:
+            color = Color.green
+        case 5..<60:
+            color = Color.blue
+        case 60..<75:
+            color = Color.orange
+        default:
+            color = Color.red
+        }
+        
+        timeString = "\(date) (\(minutes)m)"
+        
+        return (timeString, color)
     }
 }
