@@ -992,12 +992,11 @@ public struct WX {
         // WX (if any)
         if let weatherString = forecast.wxString, !weatherString.isEmpty {
             let cleanWx = WX.cleanWxString(wx: weatherString) ?? weatherString
-            if cleanWx.count > 11 {
+            if cleanWx.count > 12 {
                 wxOrCloud = weatherString
             } else {
                 wxOrCloud = cleanWx
             }
-//            wxOrCloud = WX.cleanWxString(wx: weatherString) ?? weatherString
         }
         
         // Visibility
