@@ -1047,4 +1047,24 @@ public struct WX {
         
         return (timeString, color)
     }
+    
+    // TODO: add default parameter so we can use filled in icons for certain cases?
+    public static func iconNameForMetar(metar: Metar?, lat: Double?, long: Double?) -> String {
+        var name = "circle.fill"
+        
+        let ceiling = WX.lowestCeiling(clouds: metar?.skyConditions)
+        let firstCloud = metar?.skyConditions?.first?.skyCover ?? ""
+        let wx = WX.getWx(wxString: metar?.wxString ?? "",
+                          ceilingString: ceiling?.skyCover ?? firstCloud,
+                          wind: metar?.windSpeedKts ?? 0.0,
+                          lat: lat,
+                          long: long)
+        name = WX.iconForWx(wxCondition: wx)
+        
+        if let filledIconName = WX.filledIcons[name] {
+            name = filledIconName
+        }
+        
+        return name
+    }
 }
