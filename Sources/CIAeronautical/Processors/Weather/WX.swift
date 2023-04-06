@@ -810,7 +810,11 @@ public struct WX {
         
         // TODO: also check if word that contains VRB is the first wind string (KT) we find?
         // VRB
-        if let rawText = rawText, rawText.uppercased().contains("VRB") {
+//        if let rawText = rawText, rawText.uppercased().contains("VRB") {
+//            return "VAR"
+//        }
+        
+        if getVrbWind(rawText: rawText) {
             return "VAR"
         }
         
@@ -850,30 +854,34 @@ public struct WX {
         // nil
         var dir = "-"
         
-        // VRB - only check first wind string (contains "KT") since Forecast rawTexts can have a second wind string
-        if let rawText = rawText {
-            let words = rawText.split(separator: " ")
-            var containsKT = false
-            for word in words {
-                let newWord = word.uppercased()
-                if newWord.contains("KT") {
-                    containsKT = true
-                    // make sure its not the ICAO that has KT in it
-                    if newWord.count > 4 {
-                       if newWord.contains("VRB") {
-                           return "VAR at \(speed)\(gust)"
-                       } else {
-                           break
-                       }
-                   }
-                }
-            }
-            
-            // if there's no wind string at all, its VRB
-            if !containsKT {
-                return "VAR at \(speed)\(gust)"
-            }
+        if getVrbWind(rawText: rawText) {
+            return "VAR at \(speed)\(gust)"
         }
+        
+        // VRB - only check first wind string (contains "KT") since Forecast rawTexts can have a second wind string
+//        if let rawText = rawText {
+//            let words = rawText.split(separator: " ")
+//            var containsKT = false
+//            for word in words {
+//                let newWord = word.uppercased()
+//                if newWord.contains("KT") {
+//                    containsKT = true
+//                    // make sure its not the ICAO that has KT in it
+//                    if newWord.count > 4 {
+//                       if newWord.contains("VRB") {
+//                           return "VAR at \(speed)\(gust)"
+//                       } else {
+//                           break
+//                       }
+//                   }
+//                }
+//            }
+//
+//            // if there's no wind string at all, its VRB
+//            if !containsKT {
+//                return "VAR at \(speed)\(gust)"
+//            }
+//        }
         
         // Variable Winds
         if let varWinds = WX.getVariableWind(rawText: rawText, windDir: windDir) {
@@ -1065,5 +1073,34 @@ public struct WX {
         }
         
         return name
+    }
+    
+    public static func getVrbWind(rawText: String?) -> Bool {
+        
+        if let rawText = rawText {
+            let words = rawText.split(separator: " ")
+            var containsKT = false
+            for word in words {
+                let newWord = word.uppercased()
+                if newWord.contains("KT") {
+                    // make sure its not the ICAO that has KT in it
+                    if newWord.count > 4 {
+                        containsKT = true
+                        if newWord.contains("VRB") {
+                            return true
+                        } else {
+                            break
+                        }
+                    }
+                }
+            }
+            
+            // if there's no wind string at all, its VRB
+            if !containsKT {
+                return true
+            }
+        }
+        
+        return false
     }
 }

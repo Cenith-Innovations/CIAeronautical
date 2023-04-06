@@ -82,6 +82,8 @@ public struct Metar: Hashable, Loopable {
         self.vertVisFt = vertVisFt
         self.metarType = metarType
         self.elevationM = elevationM
+        
+        self.hasVariableWind = WX.getVrbWind(rawText: rawText)
     }
     
     public var id = UUID()
@@ -115,4 +117,7 @@ public struct Metar: Hashable, Loopable {
     public var vertVisFt: Double?
     public var metarType: String?
     public var elevationM: Double?
+    
+    public var hasVariableWind: Bool
+    // TODO: also add varWindsRange?
 }
