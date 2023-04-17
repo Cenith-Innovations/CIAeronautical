@@ -63,4 +63,14 @@ public struct Wind {
         
         return (hehw: hehw, hexw: hexw, lehw: lehw, lexw: lexw)
     }
+    
+    /// Takes in a single runway heading and returns its head and crosswinds
+    public static func runwayEndWinds(heading: Double?, windSpeed: Double?, windDirection: Double?) -> (hw: Double, xw: Double)? {
+        
+        guard let hdg = heading, let speed = windSpeed, let dir = windDirection else { return nil }
+        
+        let wind = Wind(windHeading: Heading(dir), windSpeed: speed, runwayHeading: Heading(Int(hdg)))
+        
+        return (wind.headWind, wind.crossWind)
+    }
 }

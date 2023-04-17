@@ -1075,6 +1075,7 @@ public struct WX {
         return name
     }
     
+    /// Returns wether or not a METAR or Forecast has variable winds (VRB) by looking at the rawText passed in
     public static func getVrbWind(rawText: String?) -> Bool {
         
         if let rawText = rawText {
