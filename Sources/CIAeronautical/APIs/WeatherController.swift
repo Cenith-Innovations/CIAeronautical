@@ -397,6 +397,10 @@ public class WeatherController: ObservableObject {
     
     // MARK: AHAS
 
+    // TODO: Make an AHASController class instead?
+    // TODO: every function that gets AHAS should first check if the one that's beind replaced is within the 6min time frame
+    // TODO: create function that returns whether or not request should be ignored
+    
     /// Goes and fetches the current bird condition for an ICAO.
     /// - Parameter icao: Airfield ICAO
     // TODO: also not used anymore
@@ -430,6 +434,7 @@ public class WeatherController: ObservableObject {
         task.resume()
     }
     
+    /// Gets AHAS for given array of ICAO by starting a request for all after reseting ahasDict and ahasFetchedDate
     public func getAllAhasChained(icaos: [String]) {
         
         // reset dict first
@@ -440,7 +445,8 @@ public class WeatherController: ObservableObject {
         
         for icao in icaos {
             print("fetching Ahas for \(icao)...")
-            getAhas12HR(icao: icao)
+//            getAhas12HR(icao: icao)
+            getAhasCurrentOnly(icao: icao)
 //            getAhasFor(icao: icao)
         }
     }
