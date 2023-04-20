@@ -446,8 +446,8 @@ public class WeatherController: ObservableObject {
         for icao in icaos {
             print("fetching Ahas for \(icao)...")
 //            getAhas12HR(icao: icao)
-            getAhasCurrentOnly(icao: icao)
-//            getAhasFor(icao: icao)
+//            getAhasCurrentOnly(icao: icao)
+            getAhasFor(icao: icao)
         }
     }
     
@@ -459,7 +459,7 @@ public class WeatherController: ObservableObject {
                                      month: Date.getAhasDateComponents().month,
                                      day: Date.getAhasDateComponents().day,
                                      hour: Date.getAhasDateComponents().hourZ,
-                                     hr12Risk: true)
+                                     hr12Risk: false)
         
         let request = URLRequest(url: url)
         let session = URLSession(configuration: .ephemeral)
