@@ -1104,4 +1104,20 @@ public struct WX {
         
         return false
     }
+    
+    /// Returns true if passed in fields can generate wind arrows. Returns false if winds are variable (VRB, not wind range), calm, or unavailable
+    public static func hasWindArrows(rawText: String?, windDir: Double?, windSpeed: Double?, windGust: Double?) -> Bool {
+        
+        // make sure its not missing any fields we need
+        guard let text = rawText, windDir != nil , let speed = windSpeed else { return false }
+        
+        // check for VRB wind
+        if getVrbWind(rawText: text) { return false }
+        
+        // check for calm winds
+        if let gust = windGust, gust == 0, speed == 0 { return false }
+        if speed == 0 { return false }
+        
+        return true
+    }
 }

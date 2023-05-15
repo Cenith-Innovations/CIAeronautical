@@ -47,8 +47,10 @@ public struct Wind {
         guard let lowghHdg = lowghHdg else { return unknowConditions }
         guard let windSpeed = windSpeed else { return unknowConditions }
         guard let windDirection = windDirection else { return unknowConditions }
-        let heRwyHeading = Heading(Int(highHdg))
-        let leRwyHeading = Heading(Int(lowghHdg))
+        
+        // Used to use Int() func to turn high/lowHdg. Replaced with .rounded() so it doesn't just remove decimal
+        let heRwyHeading = Heading(highHdg.rounded())
+        let leRwyHeading = Heading(lowghHdg.rounded())
         
         let windDirectionInt = Int(windDirection)
         let windHeading = Heading(windDirectionInt)
@@ -69,7 +71,7 @@ public struct Wind {
         
         guard let hdg = heading, let speed = windSpeed, let dir = windDirection else { return nil }
         
-        let wind = Wind(windHeading: Heading(dir), windSpeed: speed, runwayHeading: Heading(Int(hdg)))
+        let wind = Wind(windHeading: Heading(dir), windSpeed: speed, runwayHeading: Heading(hdg.rounded()))
         
         return (wind.headWind, wind.crossWind)
     }
