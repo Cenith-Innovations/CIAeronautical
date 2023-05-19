@@ -373,14 +373,79 @@ public struct NOTAM: Decodable, Hashable {
         return false
     }
 
-    // TODO: add check for day and timeframe keywords after third word
     static public func isRunwayClosed(second: String, third: String, notam: NOTAM) -> Bool {
         
         // check that third word is closed
         if second.contains("/") {
-            if closedWords.contains(third) && notam.isActive && notam.type != .taxiway {
+            if closedWords.contains(third) && notam.isActive && notam.type != .taxiway && closedForTimeFrame(message: notam.message) {
                 return true
             }
+        }
+        
+        return false
+    }
+    
+    // TODO: add more cases for multiple closed days in different formats like "MON/TUE/WED"
+    // TODO: make this potentially return nil so we can tell if there was an error reading possible timeframe?
+    /// Returns true if passed in NOTAM message contains timeframe keywords AND we're in the timeframe now. Also returns true if there's no timeframe at all (or if error)
+    public static func closedForTimeFrame(message: String?) -> Bool {
+        
+        guard let word = message else { return true }
+                
+        let daysDictionary: [String: Set<Int>] = ["SUN": [1], "SUNDAY": [1],
+                                                  "MON": [2], "MONDAY": [2],
+                                                  "TUE": [3], "TUESDAY": [3],
+                                                  "WED": [4], "WEDNESDAY": [4],
+                                                  "THU": [5], "THURSDAY": [5],
+                                                  "FRI": [6], "FRIDAY": [6],
+                                                  "SAT": [7], "SATURDAY": [7],
+                                                  "DLY": [1,2,3,4,5,6,7], "DAILY": [1,2,3,4,5,6,7],
+                                                  "WKDAYS": [2,3,4,5,6], "WEEKDAYS": [2,3,4,5,6],
+                                                  "WKEND": [1,7], "WEEKEND": [1,7]]
+        
+        let words = Array(word.split(separator: " "))
+        var hasTimeFrame = false
+        var closedAtThisTime = false
+        var i = 0
+        let wordsCount = words.count
+        
+        while i < wordsCount {
+            let wordString = "\(words[i])"
+            
+            // if we find keyword AND its weekday Ints match the current day's weekday Int
+            if let weekdayInts = daysDictionary[wordString], i + 1 < wordsCount {
+                hasTimeFrame = true
+                
+                print("weekday keyword: \(wordString) next word is \(words[i+1])")
+
+                let secondsToAdd = -Double(Calendar.current.timeZone.secondsFromGMT())
+                let notamComps = Calendar.current.dateComponents([.weekday, .hour, .minute],
+                                                                   from: Date().addingTimeInterval(secondsToAdd))
+                let twoTimes = Array(words[i+1].split(separator: "-"))
+                
+                guard let notamWeekday = notamComps.weekday, let notamHourInt = notamComps.hour, let notamMinInt = notamComps.minute, let nowTimeframe = Int("\(notamHourInt)\(notamMinInt < 10 ? "0\(notamMinInt)" : "\(notamMinInt)")") else {
+                    print("guard")
+                    return true
+                }
+                
+                if weekdayInts.contains(notamWeekday), twoTimes.count == 2, let start = Int(twoTimes[0]), let end = Int(twoTimes[1]) {
+                    if nowTimeframe >= start && nowTimeframe <= end {
+                        print("we have timeframe and we're inside it, so make flag")
+                        closedAtThisTime = true
+                    } else { break }
+                } else { break }
+            }
+            
+            i += 1
+        }
+                
+        if hasTimeFrame && closedAtThisTime {
+            print("notam: \(message) closed timeframe")
+            return true
+        }
+        
+        if !hasTimeFrame {
+            return true
         }
         
         return false
@@ -401,12 +466,6 @@ public struct NOTAM: Decodable, Hashable {
         else {
             return (nil, idents)
         }
-    }
-
-    /// Returns true if keywords passed in can make any approach flag
-    func isApproach(firstWord: String, secondWord: String) {
-        // TODO: if it contains all ILS subtype, make the whole thing just ILS
-        print(#function)
     }
 
     // TODO: short assault landing zone runways do not match what we have in DAFIF
