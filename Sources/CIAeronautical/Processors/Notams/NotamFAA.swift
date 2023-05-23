@@ -387,6 +387,7 @@ public struct NOTAM: Decodable, Hashable {
     
     // TODO: add more cases for multiple closed days in different formats like "MON/TUE/WED"
     // TODO: make this potentially return nil so we can tell if there was an error reading possible timeframe?
+    // TODO: new format to watch out for: "AERODROME CLSD 27 MAY @ 0530L - 30 MAY @ 0530L" ???
     /// Returns true if passed in NOTAM message contains timeframe keywords AND we're in the timeframe now. Also returns true if there's no timeframe at all (or if error)
     public static func closedForTimeFrame(message: String?) -> Bool {
         
@@ -520,7 +521,7 @@ public struct NOTAM: Decodable, Hashable {
                         let next = "\(notamsArray[i+1])"
                         // TODO: also make sure its not a taxiway type and its active
                         // TODO: should this make an aerodrome flag or just create a closed flag for every runway?
-                        if closedWords.contains(next) {
+                        if closedWords.contains(next) && notam.isActive {
                             // Aerodrome Flag
                             let flagToAdd = NotamFlag(flagType: .aerodrome, notam: notam, ident: nil, subTypeString: nil)
                             flags.append(flagToAdd)
