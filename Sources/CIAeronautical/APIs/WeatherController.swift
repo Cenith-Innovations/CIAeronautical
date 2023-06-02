@@ -36,6 +36,7 @@ public class WeatherController: ObservableObject {
     
     /// Publisher that contains the BirdConditions for the input area.
     @Published public var ahas: [String: [Ahas]] = [:]
+    public var isLoadingAhas = false
     
     /// Publisher that contains the AQIs (current observations) for the input ICAO. Current observations only need to be fetched once an hour
     @Published public var airQualities: [String: [AirQuality]] = [:]
@@ -401,39 +402,6 @@ public class WeatherController: ObservableObject {
     // TODO: every function that gets AHAS should first check if the one that's beind replaced is within the 6min time frame
     // TODO: create function that returns whether or not request should be ignored
     
-    /// Goes and fetches the current bird condition for an ICAO.
-    /// - Parameter icao: Airfield ICAO
-    // TODO: also not used anymore
-    public func getBirdConditionCurrentFor(_ icao: String) {
-        let area = AHASInputs.hiddenInputs[icao] ?? ""
-        self.getBirdCondition(area: area,
-                              month: Date.getAhasDateComponents().month,
-                              day: Date.getAhasDateComponents().day,
-                              hourZ: Date.getAhasDateComponents().hourZ)
-    }
-        
-    // TODO: this one isn't used anymore
-    private func getBirdCondition(area: String, month: String, day: String, hourZ: String) {
-        let url = AhasWebAPI.AhasURL(area: area, month: month, day: day, hour: hourZ, hr12Risk: true)
-        let request = URLRequest(url: url)
-        let session = URLSession(configuration: .ephemeral)
-        let task = session.dataTask(with: request) { [weak self] (data, response, error) -> Void in
-            if let XMLData = data {
-                let birdCondition = AhasParser(data: XMLData).ahas
-                DispatchQueue.main.async {
-                    // if dateTime minutes is 00 AND current minute is not 0-6
-                    // that means we need to get current AHAS and replace first result with that
-                    
-//                    self?.ahas[icao] = birdCondition
-                }
-            } else if let requestError = error {
-                print("Error fetching metar: \(requestError)")
-            } else {
-                print("Unexpected error with request")
-            }}
-        task.resume()
-    }
-    
     /// Gets AHAS for given array of ICAO by starting a request for all after reseting ahasDict and ahasFetchedDate
     public func getAllAhasChained(icaos: [String]) {
         
@@ -445,8 +413,6 @@ public class WeatherController: ObservableObject {
         
         for icao in icaos {
             print("fetching Ahas for \(icao)...")
-//            getAhas12HR(icao: icao)
-//            getAhasCurrentOnly(icao: icao)
             getAhasFor(icao: icao)
         }
     }
@@ -455,17 +421,19 @@ public class WeatherController: ObservableObject {
     private func getAhasFor(icao: String) {
         
         let area = AHASInputs.hiddenInputs[icao] ?? ""
+        let comps = Date.getAhasDateComponents()
         let url = AhasWebAPI.AhasURL(area: area,
-                                     month: Date.getAhasDateComponents().month,
-                                     day: Date.getAhasDateComponents().day,
-                                     hour: Date.getAhasDateComponents().hourZ,
+                                     year: comps.year,
+                                     month: comps.month,
+                                     day: comps.day,
+                                     hour: comps.hourZ,
                                      hr12Risk: false)
         
         let request = URLRequest(url: url)
         let session = URLSession(configuration: .ephemeral)
         let task = session.dataTask(with: request) { [weak self] (data, response, error) -> Void in
             if let XMLData = data {
-                let birdCondition = AhasParser(data: XMLData).ahas
+                let birdCondition = AhasParser(data: XMLData, ahasType: .current).ahas
                 DispatchQueue.main.async {
                     self?.ahasDict[icao] = birdCondition.first
                 }
@@ -481,17 +449,20 @@ public class WeatherController: ObservableObject {
     public func getAhas12HR(icao: String) {
         
         let area = AHASInputs.hiddenInputs[icao] ?? ""
+        let comps = Date.getAhasDateComponents()
         let url = AhasWebAPI.AhasURL(area: area,
-                                     month: Date.getAhasDateComponents().month,
-                                     day: Date.getAhasDateComponents().day,
-                                     hour: Date.getAhasDateComponents().hourZ,
+                                     year: comps.year,
+                                     month: comps.month,
+                                     day: comps.day,
+                                     hour: comps.hourZ,
                                      hr12Risk: true)
         
         let request = URLRequest(url: url)
         let session = URLSession(configuration: .ephemeral)
+        self.isLoadingAhas = true
         let task = session.dataTask(with: request) { [weak self] (data, response, error) -> Void in
             if let XMLData = data {
-                let birdCondition = AhasParser(data: XMLData).ahas
+                let birdCondition = AhasParser(data: XMLData, ahasType: .forecast).ahas
                 DispatchQueue.main.async {
                     
                     // if first one's Date minutes is 00 AND current mins is greater than 6, fetch current Ahas only
@@ -503,13 +474,17 @@ public class WeatherController: ObservableObject {
                             self?.getAhasCurrentOnly(icao: icao)
                         }
                     }
+                    self?.isLoadingAhas = false
                     self?.ahas[icao] = birdCondition
                 }
             } else if let requestError = error {
                 print("Error fetching ahas: \(requestError)")
+                self?.isLoadingAhas = false
             } else {
+                self?.isLoadingAhas = false
                 print("Unexpected error with request")
-            }}
+            }
+        }
         task.resume()
     }
     
@@ -517,27 +492,34 @@ public class WeatherController: ObservableObject {
     public func getAhasCurrentOnly(icao: String) {
         
         let area = AHASInputs.hiddenInputs[icao] ?? ""
+        let comps = Date.getAhasDateComponents()
         let url = AhasWebAPI.AhasURL(area: area,
-                                     month: Date.getAhasDateComponents().month,
-                                     day: Date.getAhasDateComponents().day,
-                                     hour: Date.getAhasDateComponents().hourZ,
+                                     year: comps.year,
+                                     month: comps.month,
+                                     day: comps.day,
+                                     hour: comps.hourZ,
                                      hr12Risk: false)
         
         let request = URLRequest(url: url)
         let session = URLSession(configuration: .ephemeral)
+        self.isLoadingAhas = true
         let task = session.dataTask(with: request) { [weak self] (data, response, error) -> Void in
             if let XMLData = data {
-                let birdCondition = AhasParser(data: XMLData).ahas
+                let birdCondition = AhasParser(data: XMLData, ahasType: .current).ahas
                 DispatchQueue.main.async {
                     if let risks = self?.ahas[icao], let first = birdCondition.first, !risks.isEmpty {
                         self?.ahas[icao]?[0] = first
+                        self?.isLoadingAhas = false
                     }
                 }
             } else if let requestError = error {
                 print("Error fetching ahas: \(requestError)")
+                self?.isLoadingAhas = false
             } else {
                 print("Unexpected error with request")
-            }}
+                self?.isLoadingAhas = false
+            }
+        }
         task.resume()
     }
 }

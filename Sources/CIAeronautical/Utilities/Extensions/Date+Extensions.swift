@@ -19,14 +19,15 @@ public extension Date {
     }
     
     ///Returns string date components for now to enter in ahasDownloader.
-    static func getAhasDateComponents() -> (month: String, day: String, hourZ: String) {
+    static func getAhasDateComponents() -> (year: String, month: String, day: String, hourZ: String) {
         let now = Date()
         var cal = Calendar.current
         cal.timeZone = TimeZone(abbreviation: "UTC")!
+        let year = String(cal.component(.year, from: now))
         let month = String(cal.component(.month, from: now))
         let day = String(cal.component(.day, from: now))
         let hourZ = String(cal.component(.hour, from: now))
-        return (month: month, day: day, hourZ: hourZ)
+        return (year: year, month: month, day: day, hourZ: hourZ)
     }
     
     /// Returns a String of passed of Date's hour in Zulu / UTC

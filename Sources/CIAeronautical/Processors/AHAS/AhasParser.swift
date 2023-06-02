@@ -9,17 +9,26 @@
 import Foundation
 
 public class AhasParser: NSObject, XMLParserDelegate {
-    private let ahasKeys = AhasField.allCases.map { $0.rawValue }
+    
+    private let ahasKeys = Set(AhasField.allCases.map { $0.rawValue })
     private var results: [[String:String]]?
     private var currentAhas: [String:String]?
     private var currentValue: String?
     var ahas: [Ahas] = []
     var currTableInt = 0
     
-    convenience init(data: Data) {
+    private var ahasType = AhasType.forecast
+    
+    public enum AhasType: String {
+        case current = "result"
+        case forecast = "Table"
+    }
+    
+    convenience init(data: Data, ahasType: AhasType) {
         self.init()
         let parser = XMLParser(data: data)
         parser.delegate = self
+        self.ahasType = ahasType
         _ = parser.parse()
     }
     
@@ -28,7 +37,7 @@ public class AhasParser: NSObject, XMLParserDelegate {
     }
     
     public func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
-        if elementName == "Table\(currTableInt == 0 ? "" : "\(currTableInt)")" {
+        if elementName == "\(ahasType.rawValue)\(currTableInt == 0 ? "" : "\(currTableInt)")" {
             currentAhas = [:]
         } else if ahasKeys.contains(elementName) {
             currentValue = ""
@@ -40,7 +49,7 @@ public class AhasParser: NSObject, XMLParserDelegate {
     }
     
     public func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
-        if elementName == "Table\(currTableInt == 0 ? "" : "\(currTableInt)")" {
+        if elementName == "\(ahasType.rawValue)\(currTableInt == 0 ? "" : "\(currTableInt)")" {
             results!.append(currentAhas!)
             currTableInt += 1
             currentAhas = nil

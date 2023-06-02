@@ -9,30 +9,28 @@
 import Foundation
 
 public struct AhasWebAPI {
-    internal static let baseURLString = "http://www.usahas.com/webservices/ahas.asmx/GetAHASRisk?"
     
-    static func AhasURL(area: String,
-                         month: String,
-                         day: String,
-                         hour: String,
-                         parameters: [String: String]? = nil,
-                        hr12Risk: Bool = false) -> URL {
+    static func AhasURL(area: String, year: String, month: String, day: String, hour: String, parameters: [String: String]? = nil, hr12Risk: Bool = false) -> URL {
         
-        let hr12RiskURLString = "http://www.usahas.com/webservices/ahas.asmx/GetAHASRisk12?"
+        var hr12RiskURLString = "http://usahas.com/webservices/Fluffy_AHAS_\(year).asmx/GetAHASRisk\(year)_12?"
+        var currentRiskURLString = "http://usahas.com/webservices/Fluffy_AHAS_\(year).asmx/GetAHASRisk\(year)?"
         
-        var components = URLComponents(string: hr12Risk ? hr12RiskURLString : baseURLString)!
+        var components = URLComponents(string: hr12Risk ? hr12RiskURLString : currentRiskURLString)!
         var queryItems = [URLQueryItem]()
         
         let baseParams = [
-            "area" : "\"\(area)\"",
+            "Type": "ICAO",
+            "Area" : "\"\(area)\"",
             "iMonth" : month,
             "iDay" : day,
             "iHour" : hour
         ]
+        
         for (key, value) in baseParams {
             let item = URLQueryItem(name: key, value: value)
             queryItems.append(item)
         }
+        
         if let additionalParams = parameters {
             for (key, value) in additionalParams {
                 let item = URLQueryItem(name: key, value: value)
