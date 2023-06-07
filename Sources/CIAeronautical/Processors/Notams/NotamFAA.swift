@@ -61,6 +61,11 @@ public struct NOTAM: Decodable, Hashable {
     
     public var rawText: String?
     
+    // MARK: - Custom Properties
+    
+    /// Made using facilityIndicator and notamNumber since we can get 2 notams with same notamNumber but different facilityIndicators. Ex: "KLAS06/005"
+    public var id: String?
+    
     // MARK: - Computed Properties
     
     /// Returns whether or not cleanText contains any warning words.
@@ -218,6 +223,11 @@ public struct NOTAM: Decodable, Hashable {
         if let notam = message {
             cleanText = cleanNotam(notam: notam)
         }
+        
+        // id
+        if let facility = facilityDesignator, let number = notamNumber {
+            id = facility + number
+        }
     }
     
     // MARK: - Helpers
@@ -282,7 +292,7 @@ public struct NOTAM: Decodable, Hashable {
         var result = ""
         
         // remove /n and make into an Array of words
-        let words = notam.replacingOccurrences(of: "\n", with: "").split(separator: " ")
+        let words = notam.replacingOccurrences(of: "\n", with: " ").split(separator: " ")
         let count = words.count
         
         // TODO: make sure it still works with periods
@@ -297,12 +307,44 @@ public struct NOTAM: Decodable, Hashable {
                 result += "\(cleanWordPeriod) "
             }
             
+            else if word.contains("/") {
+                result += "\(multiContractions(word: word)) "
+            }
+            
             else {
                 result += "\(word) "
             }
         }
                 
         return result
+    }
+    
+    /// Replaces passed in word with translated version (if applicable)
+    private func multiContractions(word: String) -> String {
+        var results = [String]()
+        
+        // break up word where we find "/"
+        
+        // ex: "TAR/SSR"
+        let multiword = word.split(separator: "/")
+        
+        for contraction in multiword {
+            
+            if let translation = NOTAM.contractionsDict["\(contraction)"], translation.count > 1 {
+                results.append(translation)
+            }
+            
+            // if it doesn't have period inside, try adding one
+            else if let translation = NOTAM.contractionsDict["\(contraction)."], translation.count > 1 {
+                results.append(translation)
+            }
+            
+            else {
+                results.append("\(contraction)")
+            }
+        }
+        
+        return results.joined(separator: "/")
     }
     
     private func getType(first: String, second: String) -> NotamType {
@@ -354,7 +396,6 @@ public struct NOTAM: Decodable, Hashable {
     }
     
     // TODO: instead of having periods after each word, add something that removes non-letters from each word and then adds back those characters that were removed?
-    // TODO: handle cases were two keywords are joined by "/"?
     
     static public let closedWords = Set(["CLSD", "CLOSED", "CLSD.", "CLOSED."])
     static public let wetWords = Set(["WET", "WET."])
@@ -385,7 +426,7 @@ public struct NOTAM: Decodable, Hashable {
         return false
     }
     
-    // TODO: add more cases for multiple closed days in different formats like "MON/TUE/WED"
+    // TODO: add more cases for multiple closed days in different formats like "MON/TUE/WED" or "MON WED FRI"
     // TODO: make this potentially return nil so we can tell if there was an error reading possible timeframe?
     // TODO: new format to watch out for: "AERODROME CLSD 27 MAY @ 0530L - 30 MAY @ 0530L" ???
     /// Returns true if passed in NOTAM message contains timeframe keywords AND we're in the timeframe now. Also returns true if there's no timeframe at all (or if error)
@@ -430,8 +471,8 @@ public struct NOTAM: Decodable, Hashable {
                 }
                 
                 if weekdayInts.contains(notamWeekday), twoTimes.count == 2, let start = Int(twoTimes[0]), let end = Int(twoTimes[1]) {
+                    // TODO: what if the times are like 2300 - 0200 ?
                     if nowTimeframe >= start && nowTimeframe <= end {
-                        print("we have timeframe and we're inside it, so make flag")
                         closedAtThisTime = true
                     } else { break }
                 } else { break }
@@ -441,7 +482,6 @@ public struct NOTAM: Decodable, Hashable {
         }
                 
         if hasTimeFrame && closedAtThisTime {
-            print("notam: \(message) closed timeframe")
             return true
         }
         
@@ -488,20 +528,17 @@ public struct NOTAM: Decodable, Hashable {
             
         var flags = [NotamFlag]()
             
-        let firstWords = Set(["AERODROME", "AERODOME", "RWY", "RUNWAY"])
-        let aerodromeWords = Set(["AERODROME", "AERODOME"])
+        let firstWords = Set(["AERODROME", "AERODOME", "RWY", "RUNWAY", "AD"])
+        let aerodromeWords = Set(["AERODROME", "AERODOME", "AD"])
         let runwayWords =  Set(["RWY", "RUNWAY"])
-        let vortacWords = Set(["VORTAC"])
-        // TODO: can notams have these words spelled out or will they always be abbreviations?
-        let navaidWords = Set(["VORTAC", "TACAN"])
-        let approachNavWords = Set(["ILS", "ILS GS", "ILS GP", "ILS LOC", "VORTAC", "TACAN"])
-        let outageWords = Set(["U/S", "U/S.", "OTS", "OTS."])
+        let outageWords = Set(["U/S", "U/S.", "OTS", "OTS.", "OUT", "UNSERVICEABLE", "UNSERVICEABLE."])
         // most cases need 3 words in a row that go 1. RWY or AERODROME 2. Runway with / or Runway end 3. CLSD, CLOSED or WET
             
         // go through every word in notam and check for 3 words in sequence
         for notam in notams {
+            // TODO: instead of only checking message, also check ICAO and Domestic versions?
             let message = notam.message ?? ""
-            let notamsArray = Array(message.uppercased().split(separator: " "))
+            let notamsArray = Array(message.uppercased().replacingOccurrences(of: "\n", with: " ").split(separator: " "))
             
             var i = 0
             let count = notamsArray.count
@@ -630,7 +667,7 @@ public struct NOTAM: Decodable, Hashable {
                     if curr == "VORTAC" && i + 1 < count {
                         // could be U/S
                         let secondWord = "\(notamsArray[i+1])"
-                        if outageWords.contains(secondWord) && notam.isActive {
+                        if outageWords.contains(secondWord) && notam.isActive && notam.type != .procedure {
                             //
                             let flagToAdd = NotamFlag(flagType: .vortac, notam: notam, ident: notam.facilityDesignator, subTypeString: nil)
                             flags.append(flagToAdd)
@@ -747,7 +784,6 @@ public struct NOTAM: Decodable, Hashable {
                                    "DLA.": "DELAY/DELAYED",
                                    "DLT.": "DELETE",
                                    "DLY.": "DAILY",
-                                   "DME.": "DISTANCE MEASURING EQUIPMENT",
                                    "DMSTN.": "DEMONSTRATION",
                                    "DP.": "DEWPOINT TEMPERATURE",
                                    "DRFT.": "SNOWBANK(S) CAUSED BY WIND ACTION",
@@ -1021,6 +1057,21 @@ public struct NOTAM: Decodable, Hashable {
     // removed "IN.": "INCH/INCHES"
     // removed "ILS.": "INSTRUMENT LANDING SYSTEM"
     // removed "LOC.": "LOCAL/LOCALLY/LOCATION"
+    // removed "DME.": "DISTANCE MEASURING EQUIPMENT"
+    
+    public static let addedContractions = ["GS": "GLIDESLOPE",
+                                           "MBST": "MICROBURST",
+                                           "WS": "WIND SHEAR"]
+    
+    public static let removedContractions = ["DME": "DISTANCE MEASURING EQUIPMENT",
+                                             "ILS": "INSTRUMENT LANDING SYSTEM",
+                                             "IN": "INCH/INCHES",
+                                             "L": "LEFT",
+                                             "LOC": "LOCAL/LOCALLY/LOCATION/LOCALIZER",
+                                             "T": "TEMPERATURE",
+                                             "TACAN": "TACTICAL AIR NAVIGATION AID (AZIMUTH AND DME)",
+                                             "VOR": "VHF OMNI-DIRECTIONAL RADIO RANGE",
+                                             "VORTAC": "VOR AND TACAN (COLLOCATED)"]
 }
 
 public struct NotamFlag: Hashable {
