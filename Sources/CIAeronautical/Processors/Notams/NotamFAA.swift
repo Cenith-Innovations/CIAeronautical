@@ -1059,9 +1059,9 @@ public struct NOTAM: Decodable, Hashable {
     // removed "LOC.": "LOCAL/LOCALLY/LOCATION"
     // removed "DME.": "DISTANCE MEASURING EQUIPMENT"
     
-    public static let addedContractions = ["GS": "GLIDESLOPE",
-                                           "MBST": "MICROBURST",
-                                           "WS": "WIND SHEAR"]
+    public static let addedContractions: Set<String> = ["GS",
+                                           "MBST",
+                                           "WS"]
     
     public static let removedContractions = ["DME": "DISTANCE MEASURING EQUIPMENT",
                                              "ILS": "INSTRUMENT LANDING SYSTEM",
