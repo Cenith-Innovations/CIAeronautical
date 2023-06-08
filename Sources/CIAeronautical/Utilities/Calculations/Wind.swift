@@ -8,6 +8,8 @@
 
 import Foundation
 
+import SwiftUI
+
 public typealias CalcWinds = (hehw: Double, hexw: Double, lehw: Double, lexw: Double)
 
 public struct Wind {
@@ -75,4 +77,135 @@ public struct Wind {
         
         return (wind.headWind, wind.crossWind)
     }
+}
+
+public struct WindComp {
+    
+    public struct WindError: Error {
+        public let shortText: String
+        public let longText: String
+    }
+    
+    /// Takes in a single runway heading and returns its head and crosswinds
+    public static func runwayWinds(heading: Double, windSpeed: Double, windDirection: Double) -> (hw: Double, xw: Double) {
+                
+        let wind = Wind(windHeading: Heading(windDirection),
+                        windSpeed: windSpeed,
+                        runwayHeading: Heading(heading.rounded()))
+        
+        return (wind.headWind, wind.crossWind)
+    }
+    
+    /// Returns all components needed for making wind arrow UI on success. On failure, returns a WindError
+    public static func calcWindComps(heading: Double?, direction: Double?, speed: Double?, gust: Double?, rawText: String?) -> Result<(vertical: WindComp, horizontal: WindComp), WindError> {
+        
+        // VRB
+        guard !WX.getVrbWind(rawText: rawText) else {
+            return .failure(WindError(shortText: "VAR", longText: "Winds Variable"))
+        }
+        
+        // Wind Unavailable
+        guard let heading = heading, let dir = direction, let spd = speed else {
+            return .failure(WindError(shortText: "N/A", longText: "Winds N/A"))
+        }
+        
+        // Calm
+        guard spd != 0 else {
+            return .failure(WindError(shortText: "Calm", longText: "Winds Calm"))
+        }
+        
+        let comps = WindComp.runwayWinds(heading: heading,
+                                        windSpeed: spd,
+                                        windDirection: dir)
+        
+        // Gust
+        var gustVerticalString = ""
+        var gustHorizontalString = ""
+        
+        // Results
+        let verticalComps = WindComp.headTailWinds(val: Int(comps.hw.rounded()))
+        let horizontalComps = WindComp.crossWinds(val: Int(comps.xw.rounded()))
+        let headTailArrow = Int(comps.hw) > 0 ? "arrowtriangle.down.fill" : "arrowtriangle.up.fill"
+        let crossArrow = Int(comps.xw) > 0 ? "arrowtriangle.right.fill" : "arrowtriangle.left.fill"
+        
+        var crossColor = horizontalComps.color
+        
+        if let gust = gust {
+            let gustComps = WindComp.runwayWinds(heading: heading, windSpeed: gust, windDirection: dir)
+            // TODO: "-" should only be added if speed val is not 0 or 1
+            gustVerticalString = "-\(WindComp.headTailWinds(val: Int(gustComps.hw.rounded())).val)"
+            let gustHoriComps = WindComp.crossWinds(val: Int(gustComps.xw.rounded()))
+            gustHorizontalString = "-\(gustHoriComps.val)"
+            crossColor = gustHoriComps.color
+        }
+               
+        let vertString = gustVerticalString.isEmpty ? "\(verticalComps.val)kts" : verticalComps.val + gustVerticalString
+        let horiString = gustHorizontalString.isEmpty ? "\(horizontalComps.dir)\(horizontalComps.val)kts" : "\(horizontalComps.dir)\(horizontalComps.val)" + gustHorizontalString
+                
+        let result = (WindComp(windType: verticalComps.type,
+                               iconName: headTailArrow,
+                               iconColor: verticalComps.color,
+                               speedString: verticalComps.val,
+                               gustString: verticalComps.val + gustVerticalString,
+                               gustStringKts: vertString),
+                      WindComp(windType: .cross,
+                               iconName: crossArrow,
+                               iconColor: crossColor,
+                               speedString: "\(horizontalComps.dir)\(horizontalComps.val)",
+                               gustString: "\(horizontalComps.dir)\(horizontalComps.val)" + gustHorizontalString,
+                               gustStringKts: horiString))
+        
+        return .success(result)
+    }
+    
+    public static func headTailWinds(val: Int) -> (type: WindType, val: String, color: Color?) {
+                
+        // nothing
+        if val == 0 { return (.none, "", nil) }
+        
+        // HW
+        if val > 0 { return (.head, "\(abs(val))", Color.green) }
+        
+        // TW
+        else { return (.tail, "\(abs(val))", Color.red) }
+    }
+    
+    public static func crossWinds(val: Int) -> (dir: String, val: String, color: Color?) {
+        
+        if val == 0 { return ("", "", nil) }
+        
+        let absVal = abs(val)
+        let letter = val > 0 ? "L" : "R"
+        
+        var color = Color.gray
+        if absVal > 15 { color = Color.yellow }
+        if absVal > 25 { color = Color.red }
+        
+        return (letter, "\(absVal)", color)
+    }
+    
+    public enum WindType: String {
+        case head = "HW"
+        case tail = "TW"
+        case cross = "XW"
+        case none = ""
+    }
+    
+    /// HW, TW, XW
+    public let windType: WindComp.WindType
+    
+    /// "arrowtriangle.down.fill"
+    public let iconName: String?
+    
+    /// .green, .red, .yellow, .gray, .clear
+    public let iconColor: Color?
+    
+    /// Speed in knots with NO gust
+    public let speedString: String
+    
+    /// Gust in knots
+    public let gustString: String
+    
+    /// Speed only in knots plus "kts" at the end
+    public let gustStringKts: String
 }
