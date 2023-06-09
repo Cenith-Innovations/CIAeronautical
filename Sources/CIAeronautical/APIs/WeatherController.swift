@@ -19,8 +19,7 @@ public class WeatherController: ObservableObject {
     @Published public var notams: [String: [Notam]] = [:]
     @Published public var notamsLastFetchedDate: Date?
     
-//    @Published public var notamsFaa: [String: [NOTAM]] = [:]
-    /// Publisher that holds NOTAMS for all icaos (FAA ones, not DINS)
+    /// Publisher that holds NOTAMS for all icaos (FAA ones, not DINS). Use the "?" key to access unmatched/shared notams
     @Published public var notamsFaa = [String: [NOTAM]]()
     @Published public var notamsFaaLastFetchedDate: Date? { didSet { print("updated last fetched date") } }
     @Published public var isLoadingAllNotamsFaa = false
@@ -276,19 +275,18 @@ public class WeatherController: ObservableObject {
     /// Returns a dictionary of all NOTAMS for input ICAOS. Also takes in offset and total NOTAMS count integers and list of previous NOTAMS to recursively chain together next
     /// page's worth of NOTAMS since FAA endpoint only returns 30 results at a time. This is a backup for our server's NOTAMS endpoint.
     public func getAllNotamsFAA(icaos: [String], offset: Int = 0, prevNotams: [NOTAM] = [], total: Int = 0) {
-        print(#function)
-        guard notamsFaaNeedRefresh else {
-            print("returning early since notamsFaa are less than 2 mins old")
-            return
-        }
+        
+        guard notamsFaaNeedRefresh else { return }
         
         let url = URL(string: "https://notams.aim.faa.gov/notamSearch/search")!
         var request = URLRequest(url: url)
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.httpMethod = "POST"
-        let icaosString = icaos.joined(separator: ",")
-        // TODO: only send relevant parameters?
-        // TODO: strip first "K" from each icao and use that for search string so we can get back some nearby locations too
+        
+        let facilities = Array(icaos.map { String($0.dropFirst()) })
+        let icaosString = facilities.joined(separator: ",")
+        let facilitiesSet = Set(facilities)
+        
         let postData = "searchType=0&designatorsForLocation=\(icaosString)&designatorForAccountable=&latDegrees=&latMinutes=0&latSeconds=0&longDegrees=&longMinutes=0&longSeconds=0&radius=10&sortColumns=5+false&sortDirection=true&designatorForNotamNumberSearch=&notamNumber=&radiusSearchOnDesignator=false&radiusSearchDesignator=&latitudeDirection=N&longitudeDirection=W&freeFormText=&flightPathText=&flightPathDivertAirfields=&flightPathBuffer=4&flightPathIncludeNavaids=true&flightPathIncludeArtcc=false&flightPathIncludeTfr=true&flightPathIncludeRegulatory=false&flightPathResultsType=All+NOTAMs&archiveDate=&archiveDesignator=&offset=\(offset)&filters=Keywords:+Aerodrome-AD~Aerodrome-APRON~Aerodrome-CONSTRUCTION~Aerodrome-RWY~Aerodrome-SVC~Aerodrome-TWY~Airspace-AIRSPACE~Airspace-CARF~Airspace-TFR~Chart-CHART~Communication-AD~Communication-COM~GPS-GPS~International-INTERNATIONAL~Military-MILITARY~Navaid-AD~Navaid-AIRSPACE~Navaid-COM~Navaid-NAV~Navaid-RWY~Navaid-SVC~Obstruction-OBST~Other-(O)~Procedure-FDC/Other~Procedure-IAP~Procedure-ODP~Procedure-SID~Procedure-SPECIAL~Procedure-STAR~Procedure-VFP~Route-ROUTE~Security-SECURITY~Services-SVC"
         
         request.httpBody = postData.data(using: .utf8)
@@ -310,7 +308,20 @@ public class WeatherController: ObservableObject {
                                 let allNotams = notamList + prevNotams
                                 var tempNotams = [String: [NOTAM]]()
                                 for notam in allNotams {
-                                    guard let icao = notam.icaoId else { continue }
+                                    
+                                    guard let key = notam.facilityDesignator, facilitiesSet.contains(key) else {
+                                        
+                                        // if this is a facility we didn't search for, add it to "?" Array
+                                        if tempNotams["?"] == nil {
+                                            tempNotams["?"] = [notam]
+                                        } else {
+                                            tempNotams["?"]!.append(notam)
+                                        }
+                                        
+                                        continue
+                                    }
+                                    
+                                    let icao = "K\(key)"
                                     if tempNotams[icao] == nil {
                                         tempNotams[icao] = [notam]
                                     } else {
@@ -321,7 +332,6 @@ public class WeatherController: ObservableObject {
                                 self?.notamsFaa = tempNotams
                                 self?.isLoadingAllNotamsFaa = false
                                 self?.notamsFaaLastFetchedDate = Date()
-                                print("got all notams")
                                 return
                             } else {
                                 self?.getAllNotamsFAA(icaos: icaos,
