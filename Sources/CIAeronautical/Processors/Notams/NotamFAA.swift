@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 public struct NotamsResponse: Decodable {
     public let startRecordCount: Int?
@@ -531,7 +532,7 @@ public struct NOTAM: Decodable, Hashable {
         let firstWords = Set(["AERODROME", "AERODOME", "RWY", "RUNWAY", "AD"])
         let aerodromeWords = Set(["AERODROME", "AERODOME", "AD"])
         let runwayWords =  Set(["RWY", "RUNWAY"])
-        let outageWords = Set(["U/S", "U/S.", "OTS", "OTS.", "OUT", "UNSERVICEABLE", "UNSERVICEABLE."])
+        let outageWords = Set(["U/S", "U/S.", "OTS", "OTS,", "OTS.", "OUT", "UNSERVICEABLE", "UNSERVICEABLE."])
         // most cases need 3 words in a row that go 1. RWY or AERODROME 2. Runway with / or Runway end 3. CLSD, CLOSED or WET
             
         // go through every word in notam and check for 3 words in sequence
@@ -551,7 +552,6 @@ public struct NOTAM: Decodable, Hashable {
                 
                 // 1. AERODROME, RWY, or RUNWAY
                 if firstWords.contains(curr) {
-                    print("Found first word: \(curr) - !")
                     
                     // AERODROME
                     if aerodromeWords.contains(curr) && i + 1 < count {
@@ -573,7 +573,6 @@ public struct NOTAM: Decodable, Hashable {
                         
                         // TODO: try to pull out next 2 words and use separate function to check idents / runway status
                         if isRunwayClosed(second: secondWord, third: thirdWord, notam: notam) {
-                            print("found closed runway: \(curr) \(secondWord) \(thirdWord)")
                             // only add notams that are NOT a taxiway type and are active
                             // TODO: add back check for not being a taxiway type and also being an active notam
                                                     
@@ -584,7 +583,6 @@ public struct NOTAM: Decodable, Hashable {
                             if let wholeName = runwayName.whole { ident = wholeName }
                             
                             let flagToAdd = NotamFlag(flagType: .closed, notam: notam, ident: ident, subTypeString: nil)
-                            print("runway ends \(getRunwayEnds(text: secondWord))")
                             // TODO: instead of a mixed array of NotamFlags, use Flags struct instead?
                             flags.append(flagToAdd)
                         }
@@ -604,7 +602,6 @@ public struct NOTAM: Decodable, Hashable {
                 // TODO: if curr is any warning flag word, redirect to other function
                 // TODO: make a function that takes in a warning flag word and then returns it as a corresponding flag
                 if curr == "ILS" && i + 3 < count {
-                    print("found ILS start word \(curr)")
                     
                     // should be RWY or RUNWAY
                     let secondWord = "\(notamsArray[i+1])"
@@ -638,40 +635,41 @@ public struct NOTAM: Decodable, Hashable {
                     // ILS RWY XX LOC U/S
                     // ILS RWY XX LOC/GP/DME U/S
                     
-                    // TACAN RWY XX U/S
-                    if curr == "TACAN" && i + 1 < count && notam.isActive {
-                        // could be U/S or RWY
-                        let secondWord = "\(notamsArray[i+1])"
-                        if outageWords.contains(secondWord) {
-                            // TACAN (Nav version)
-                            let flagToAdd = NotamFlag(flagType: .tacanNav, notam: notam, ident: notam.facilityDesignator, subTypeString: nil)
-                            flags.append(flagToAdd)
-                        }
-                        
-                        // TACAN (Approach version)
-                        else if i + 3 < count && runwayWords.contains(secondWord) {
-                            // should be ident
-                            let thirdWord = "\(notamsArray[i+2])"
-                            // should U/S
-                            let fourthWord = "\(notamsArray[i+3])"
-                            if outageWords.contains(fourthWord) {
-                                let flagToAdd = NotamFlag(flagType: .tacan, notam: notam, ident: thirdWord, subTypeString: nil)
-                                flags.append(flagToAdd)
-                            }
-                        }
+                }
+                
+                // TACAN RWY XX U/S
+                if curr == "TACAN" && i + 1 < count && notam.isActive {
+                    // could be U/S or RWY
+                    let secondWord = "\(notamsArray[i+1])"
+                    if outageWords.contains(secondWord) && notam.type == .airport {
+                        // TACAN (Nav version)
+                        let flagToAdd = NotamFlag(flagType: .tacanNav, notam: notam, ident: notam.facilityDesignator, subTypeString: nil)
+                        flags.append(flagToAdd)
                     }
                     
-                    // Nav
-                    // TACAN U/S
-                    // VORTAC U/S
-                    if curr == "VORTAC" && i + 1 < count {
-                        // could be U/S
-                        let secondWord = "\(notamsArray[i+1])"
-                        if outageWords.contains(secondWord) && notam.isActive && notam.type != .procedure {
-                            //
-                            let flagToAdd = NotamFlag(flagType: .vortac, notam: notam, ident: notam.facilityDesignator, subTypeString: nil)
+                    // TACAN (Approach version)
+                    else if i + 3 < count && runwayWords.contains(secondWord) {
+                        // should be ident
+                        let thirdWord = "\(notamsArray[i+2])"
+                        // should U/S
+                        let fourthWord = "\(notamsArray[i+3])"
+                        if outageWords.contains(fourthWord) {
+                            let flagToAdd = NotamFlag(flagType: .tacan, notam: notam, ident: thirdWord, subTypeString: nil)
                             flags.append(flagToAdd)
                         }
+                    }
+                }
+                
+                // Nav
+                // TACAN U/S
+                // VORTAC U/S
+                if curr == "VORTAC" && i + 1 < count {
+                    // could be U/S
+                    let secondWord = "\(notamsArray[i+1])"
+                    if outageWords.contains(secondWord) && notam.isActive && notam.type == .airport {
+                        //
+                        let flagToAdd = NotamFlag(flagType: .vortac, notam: notam, ident: notam.facilityDesignator, subTypeString: nil)
+                        flags.append(flagToAdd)
                     }
                 }
                 
@@ -1102,11 +1100,22 @@ public struct NotamFlag: Hashable {
     
     public let flagType: FlagType
     public let notam: NOTAM
-//    public let lowIdent: String?
-//    public let highIdent: String?
     public let ident: String?
     public let subTypeString: String?
     
+    public var icon: (name: String, color: Color) {
+        switch flagType {
+            
+        case .aerodrome:
+            return ("a.square.fill", Color.red)
+        case .closed:
+            return ("xmark.octagon.fill", Color.red)
+        case .wet:
+            return ("drop.circle.fill", Color.blue)
+        case .ils, .loc, .gs, .gp, .dme, .ilsSubType, .tacan, .vortac, .tacanNav:
+            return ("exclamationmark.triangle.fill", Color.yellow)
+        }
+    }
     /// Ex: "15/33". This is how runway names appear in NOTAMS
 //    public var slashName: String? {
 //        guard let low = lowIdent, let high = highIdent else { return nil }
