@@ -775,28 +775,41 @@ public struct WX {
         return (.none, .none, .none)
     }
     
-    // TODO: needs to first look for first wind string (has KT at the end), then check if the next word is exactly 7 chars long with V in the middle
     /// Returns the high and low ends of a Metar's wind direction. If no variable wind, returns wind direction as both low and high. Returns nil if no wind direction
     public static func getVariableWind(rawText: String?, windDir: Double? = nil) -> (low: Int, high: Int)? {
         
         guard let rawText = rawText, let windDir = windDir else { return nil }
         
-        let words = rawText.split(separator: " ")
+        let words = Array(rawText.split(separator: " "))
         
-        // TODO: "V" String needs to come directly after first "KT" String
-        // return low and high ends of wind variation if it exists
-        for word in words {
-            if word.count == 7 {
-                let wordArray = Array(word)
-                if wordArray[3].uppercased() == "V" {
-                    let low = Int("\(wordArray[0])\(wordArray[1])\(wordArray[2])")
-                    let high = Int("\(wordArray[4])\(wordArray[5])\(wordArray[6])")
-                    guard let low = low, let high = high else { return nil }
-                    return (low, high)
+        let count = words.count
+        var i = 0
+        
+        while i < count {
+            
+            let word = String(words[i])
+            
+            // Look for FIRST wind string
+            if word.contains("KT"), i + 1 < count {
+                let nextWordArray = Array(words[i+1])
+                let nextWordCount = nextWordArray.count
+                
+                // wind range string should be 7 chars long and have a V in the middle
+                if nextWordCount == 7 {
+                    if nextWordArray[3].uppercased() == "V" {
+                        let low = Int("\(nextWordArray[0])\(nextWordArray[1])\(nextWordArray[2])")
+                        let high = Int("\(nextWordArray[4])\(nextWordArray[5])\(nextWordArray[6])")
+                        guard let low = low, let high = high else { return nil }
+                        return (low, high)
+                    }
                 }
+                
+                break
             }
+            
+            i += 1
         }
-         
+        
         // if we do not find variable wind, return wind direction as high and low
         let result = Int(windDir)
         return (result, result)
@@ -807,12 +820,6 @@ public struct WX {
         
         // nil
         var dir = "-"
-        
-        // TODO: also check if word that contains VRB is the first wind string (KT) we find?
-        // VRB
-//        if let rawText = rawText, rawText.uppercased().contains("VRB") {
-//            return "VAR"
-//        }
         
         if getVrbWind(rawText: rawText) {
             return "VAR"
@@ -857,31 +864,6 @@ public struct WX {
         if getVrbWind(rawText: rawText) {
             return "VAR at \(speed)\(gust)"
         }
-        
-        // VRB - only check first wind string (contains "KT") since Forecast rawTexts can have a second wind string
-//        if let rawText = rawText {
-//            let words = rawText.split(separator: " ")
-//            var containsKT = false
-//            for word in words {
-//                let newWord = word.uppercased()
-//                if newWord.contains("KT") {
-//                    containsKT = true
-//                    // make sure its not the ICAO that has KT in it
-//                    if newWord.count > 4 {
-//                       if newWord.contains("VRB") {
-//                           return "VAR at \(speed)\(gust)"
-//                       } else {
-//                           break
-//                       }
-//                   }
-//                }
-//            }
-//
-//            // if there's no wind string at all, its VRB
-//            if !containsKT {
-//                return "VAR at \(speed)\(gust)"
-//            }
-//        }
         
         // Variable Winds
         if let varWinds = WX.getVariableWind(rawText: rawText, windDir: windDir) {

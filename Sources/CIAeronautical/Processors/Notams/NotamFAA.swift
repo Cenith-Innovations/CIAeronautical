@@ -556,8 +556,6 @@ public struct NOTAM: Decodable, Hashable {
                     // AERODROME
                     if aerodromeWords.contains(curr) && i + 1 < count {
                         let next = "\(notamsArray[i+1])"
-                        // TODO: also make sure its not a taxiway type and its active
-                        // TODO: should this make an aerodrome flag or just create a closed flag for every runway?
                         if closedWords.contains(next) && notam.isActive {
                             // Aerodrome Flag
                             let flagToAdd = NotamFlag(flagType: .aerodrome, notam: notam, ident: nil, subTypeString: nil)
