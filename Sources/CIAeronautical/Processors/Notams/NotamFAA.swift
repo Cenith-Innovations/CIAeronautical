@@ -218,7 +218,7 @@ public struct NOTAM: Decodable, Hashable {
         // TODO: assign this last so we can give it an error/unknown type if something goes wrong above
         // TODO: also send "message" property so we can check it for bird keywords?
         // type
-        type = qCode(icaoMessage: icaoMessage)
+        type = qCode(icaoMessage: icaoMessage, featureName: featureName)
         
         // cleanText
         if let notam = message {
@@ -253,7 +253,7 @@ public struct NOTAM: Decodable, Hashable {
         return true
     }
     
-    public func qCode(icaoMessage: String?) -> NotamType {
+    public func qCode(icaoMessage: String?, featureName: String?) -> NotamType {
         
         // type is unknown if we can't even get icaoMessage, which contains the Q Code
         guard let qString = icaoMessage else { return .unknown }
@@ -274,7 +274,7 @@ public struct NOTAM: Decodable, Hashable {
                     if char == "Q", (j+4) < count {
                         let firstLetter = "\(stringArray[j+1])"
                         let secondLetter = "\(stringArray[j+2])"
-                        return getType(first: firstLetter, second: secondLetter)
+                        return getType(first: firstLetter, second: secondLetter, feature: featureName)
                     }
                     j += 1
                 }
@@ -348,7 +348,7 @@ public struct NOTAM: Decodable, Hashable {
         return results.joined(separator: "/")
     }
     
-    private func getType(first: String, second: String) -> NotamType {
+    private func getType(first: String, second: String, feature: String?) -> NotamType {
         let both = first.uppercased() + second.uppercased()
         // 1. TFR/Warning: Any W- or T-. RT
         // 2. Runway: MR, ML, MT
@@ -375,7 +375,7 @@ public struct NOTAM: Decodable, Hashable {
         if first == "C" || first == "F" || first == "L" || first == "N" || first == "S" { return .airport }
         
         // Instrument Procedure
-        if first == "I" || first == "P" { return .procedure }
+        if first == "I" || first == "P" || feature == "Procedure" { return .procedure }
         
         // Airspace
         if first == "A" { return .airspace }
@@ -651,7 +651,6 @@ public struct NOTAM: Decodable, Hashable {
             
         // go through every word in notam and check for 3 words in sequence
         for notam in notams {
-            // TODO: instead of only checking message, also check ICAO and Domestic versions?
             let message = notam.message ?? ""
             let notamsArray = Array(message.uppercased().replacingOccurrences(of: "\n", with: " ").split(separator: " "))
             
@@ -788,15 +787,21 @@ public struct NOTAM: Decodable, Hashable {
                 }
                 
                 // Nav
-                // TACAN U/S
                 // VORTAC U/S
                 if curr == "VORTAC" && i + 1 < count {
                     // could be U/S
                     let secondWord = "\(notamsArray[i+1])"
-                    if outageWords.contains(secondWord) && notam.isActive && notam.type == .airport {
-                        //
+                    if outageWords.contains(secondWord) && notam.isActive && notam.type != .procedure {
                         let flagToAdd = NotamFlag(flagType: .vortac, notam: notam, ident: notam.facilityDesignator, subTypeString: nil)
                         flags.append(flagToAdd)
+                    }
+                    
+                    else if i + 2 < count {
+                        let wordAfterNext = "\(notamsArray[i+2])"
+                        if outageWords.contains(wordAfterNext) && notam.isActive && notam.type != .procedure {
+                            let flagToAdd = NotamFlag(flagType: .vortac, notam: notam, ident: notam.facilityDesignator, subTypeString: nil)
+                            flags.append(flagToAdd)
+                        }
                     }
                 }
                 
