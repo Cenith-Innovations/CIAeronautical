@@ -427,6 +427,120 @@ public struct NOTAM: Decodable, Hashable {
         return false
     }
     
+    /// Checks passed in word to see if it can be a number between 1-31. First strips it of any non number characters
+    public static func hasDayInt(word: String) -> Int? {
+                
+        // strip off non num characters
+        let result = word.filter("0123456789".contains)
+        
+        // make into an Int if possible
+        if let dayInt = Int(result), 1...31 ~= dayInt {
+            return dayInt
+        }
+        
+        return nil
+    }
+    
+    /// Tries to return hour and minutes for a passed in String. Returns nil if word contains "L" or if we can't make into pair of Ints. Ex: "1400Z)." -> (hour: 14, mins: 0)"
+    public static func hasZuluHourMins(word: String) -> (hour: Int, mins: Int)? {
+        
+        // Ignore "L" hours/mins since we can't really use local time, zulu only
+        guard !word.contains("L") else { return nil }
+        
+        // strip of non num characters
+        let result = word.filter("0123456789".contains)
+        
+        // check if count == 4
+        // first 2 chars and last 2 chars should both be made into Ints
+        let charsArray = Array(result)
+        if charsArray.count == 4, let hours = Int("\(charsArray[0])\(charsArray[1])"), let mins = Int("\(charsArray[2])\(charsArray[3])") {
+            return (hours, mins)
+        }
+        
+        return nil
+    }
+    
+    public static func isTimeFrameActive(message: String?) -> Bool {
+        
+        guard let message = message else { return true }
+                
+        let words = Array(message.split(separator: " "))
+        let count = words.count
+        var i = 0
+        var startDate: Date?
+        var endDate: Date?
+        
+        let monthDict = ["JAN": 1, "JANUARY": 1,
+                         "FEB": 2, "FEBRUARY": 2,
+                         "MAR": 3, "MARCH": 3,
+                         "APR": 4, "APRIL": 4,
+                         "MAY": 5,
+                         "JUN": 6, "JUNE": 6,
+                         "JUL": 7, "JULY": 7,
+                         "AUG": 8, "AUGUST": 8,
+                         "SEP": 9, "SEPTEMBER": 9,
+                         "OCT": 10, "OCTOBER": 10,
+                         "NOV": 11, "NOVEMBER": 11,
+                         "DEC": 12, "DECEMBER": 12]
+        
+        while i < count {
+            
+            let word = String(words[i])
+            
+            // look for start of timeframe (should be day Int portion)
+            if let day = hasDayInt(word: word), i + 2 < count {
+                // now look for next word which should be a month (abbr or spelled out)
+                let monthKeyword = String(words[i+1])
+                let hourMinKeyword = String(words[i+2])
+                if let month = monthDict[monthKeyword] {
+                    if let hoursMins = hasZuluHourMins(word: hourMinKeyword) {
+                        let timezone = TimeZone(abbreviation: "UTC")!
+                        let cal = Calendar.current
+                        let nextDateComps = DateComponents(calendar: cal,
+                                                           timeZone: timezone,
+                                                           month: month,
+                                                           day: day,
+                                                           hour: hoursMins.hour,
+                                                           minute: hoursMins.mins)
+                        
+                        let nextDate = Calendar.current.nextDate(after: Date(),
+                                                                 matching: nextDateComps,
+                                                                 matchingPolicy: .nextTime)
+                        
+                        if let next = nextDate, let nextDateYear = Calendar.current.dateComponents([.year], from: next).year {
+                            let newDate = Calendar.current.date(from: DateComponents(calendar: cal,
+                                                                                     timeZone: timezone,
+                                                                                     year: nextDateYear,
+                                                                                     month: month,
+                                                                                     day: day,
+                                                                                     hour: hoursMins.hour,
+                                                                                     minute: hoursMins.mins))
+                            if startDate == nil {
+                                startDate = newDate
+                            } else {
+                                endDate = newDate
+                            }
+                        }
+                    }
+                }
+                
+            }
+            
+            i += 1
+        }
+                
+        if let start = startDate, let end = endDate {
+            let now = Date()
+            print("AD timeframe start: \(start) end: \(end)")
+            if now >= start && now < end {
+                return true
+            } else { return false }
+        }
+        
+        return true
+    }
+
+    
     // TODO: add more cases for multiple closed days in different formats like "MON/TUE/WED" or "MON WED FRI"
     // TODO: make this potentially return nil so we can tell if there was an error reading possible timeframe?
     // TODO: new format to watch out for: "AERODROME CLSD 27 MAY @ 0530L - 30 MAY @ 0530L" ???
@@ -556,10 +670,19 @@ public struct NOTAM: Decodable, Hashable {
                     // AERODROME
                     if aerodromeWords.contains(curr) && i + 1 < count {
                         let next = "\(notamsArray[i+1])"
-                        if closedWords.contains(next) && notam.isActive {
+                        if closedWords.contains(next) && notam.isActive && isTimeFrameActive(message: notam.message) {
                             // Aerodrome Flag
                             let flagToAdd = NotamFlag(flagType: .aerodrome, notam: notam, ident: nil, subTypeString: nil)
                             flags.append(flagToAdd)
+                        }
+                        
+                        else if i + 2 < count {
+                            let wordAfterNext = "\(notamsArray[i+2])"
+                            if closedWords.contains(wordAfterNext) && notam.isActive && isTimeFrameActive(message: notam.message) {
+                                // Aerodrome Flag
+                                let flagToAdd = NotamFlag(flagType: .aerodrome, notam: notam, ident: nil, subTypeString: nil)
+                                flags.append(flagToAdd)
+                            }
                         }
                     }
                     
@@ -569,11 +692,8 @@ public struct NOTAM: Decodable, Hashable {
                         let secondWord = "\(notamsArray[i+1])"
                         let thirdWord = "\(notamsArray[i+2])"
                         
-                        // TODO: try to pull out next 2 words and use separate function to check idents / runway status
                         if isRunwayClosed(second: secondWord, third: thirdWord, notam: notam) {
                             // only add notams that are NOT a taxiway type and are active
-                            // TODO: add back check for not being a taxiway type and also being an active notam
-                                                    
                             let runwayName = getRunwayEnds(text: secondWord)
                             
                             // flag ident is either whole or single depending on which one is nil
@@ -597,8 +717,6 @@ public struct NOTAM: Decodable, Hashable {
                 }
                 
                 // 2. Approach and Nav flags words
-                // TODO: if curr is any warning flag word, redirect to other function
-                // TODO: make a function that takes in a warning flag word and then returns it as a corresponding flag
                 if curr == "ILS" && i + 3 < count {
                     
                     // should be RWY or RUNWAY
@@ -626,7 +744,6 @@ public struct NOTAM: Decodable, Hashable {
                         }
                     }
                                         
-                    // TODO: send next 3 words first. If 4th is "U/S", make ILS flag. Else, get 4th and send into separate func
                     // Needs ILS keyword then RWY or RUNWAY, then ident then if next is multi or none its ILS.
                     // "ILS RWY XX U/S"
                     // ILS RWY XX GS U/S
@@ -639,10 +756,22 @@ public struct NOTAM: Decodable, Hashable {
                 if curr == "TACAN" && i + 1 < count && notam.isActive {
                     // could be U/S or RWY
                     let secondWord = "\(notamsArray[i+1])"
-                    if outageWords.contains(secondWord) && notam.type == .airport {
+                    if outageWords.contains(secondWord) && notam.type != .procedure {
                         // TACAN (Nav version)
                         let flagToAdd = NotamFlag(flagType: .tacanNav, notam: notam, ident: notam.facilityDesignator, subTypeString: nil)
                         flags.append(flagToAdd)
+                    }
+                    
+                    // if nav but has subtype (AZM or DME)
+                    else if i + 2 < count {
+                        let subTypeWord = "\(notamsArray[i+1])"
+                        let outageWord = "\(notamsArray[i+2])"
+                        
+                        if outageWords.contains(outageWord) && notam.type != .procedure {
+                            // TACAN (Nav version)
+                            let flagToAdd = NotamFlag(flagType: .tacanNav, notam: notam, ident: notam.facilityDesignator, subTypeString: subTypeWord)
+                            flags.append(flagToAdd)
+                        }
                     }
                     
                     // TACAN (Approach version)
