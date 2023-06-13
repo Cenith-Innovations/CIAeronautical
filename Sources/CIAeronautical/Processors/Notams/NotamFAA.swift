@@ -496,18 +496,7 @@ public struct NOTAM: Decodable, Hashable {
                     if let hoursMins = hasZuluHourMins(word: hourMinKeyword) {
                         let timezone = TimeZone(abbreviation: "UTC")!
                         let cal = Calendar.current
-                        let nextDateComps = DateComponents(calendar: cal,
-                                                           timeZone: timezone,
-                                                           month: month,
-                                                           day: day,
-                                                           hour: hoursMins.hour,
-                                                           minute: hoursMins.mins)
-                        
-                        let nextDate = Calendar.current.nextDate(after: Date(),
-                                                                 matching: nextDateComps,
-                                                                 matchingPolicy: .nextTime)
-                        
-                        if let next = nextDate, let nextDateYear = Calendar.current.dateComponents([.year], from: next).year {
+                        if let nextDateYear = Calendar.current.dateComponents([.year], from: Date()).year {
                             let newDate = Calendar.current.date(from: DateComponents(calendar: cal,
                                                                                      timeZone: timezone,
                                                                                      year: nextDateYear,
