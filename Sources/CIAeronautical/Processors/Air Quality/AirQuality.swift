@@ -221,13 +221,13 @@ public struct AirQuality: Decodable, Hashable, Comparable {
         switch name {
         case 1:
             // Green
-            return (Color.green, Color.black)//(Color.green, Color.black)
+            return (Color.green, Color.black)
         case 2:
             // Yellow
             return (Color.yellow, Color.black)
         case 3:
             // Orange
-            return (Color.orange, Color.white)
+            return (Color.orange, Color.black)
         case 4:
             // Red
             return (Color.red, Color.white)
