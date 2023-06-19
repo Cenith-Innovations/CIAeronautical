@@ -110,10 +110,18 @@ public struct WindComp {
         }
         
         // Calm
-        guard spd != 0 else {
-            return .failure(WindError(shortText: "Calm", longText: "Winds Calm"))
+        if spd == 0 {
+            if let gust = gust {
+                if gust == 0 {
+                    // Gust that is also 0
+                    return .failure(WindError(shortText: "Calm", longText: "Winds Calm"))
+                }
+            } else {
+                // No gust
+                return .failure(WindError(shortText: "Calm", longText: "Winds Calm"))
+            }
         }
-        
+                
         let comps = WindComp.runwayWinds(heading: heading,
                                         windSpeed: spd,
                                         windDirection: dir)
@@ -132,7 +140,6 @@ public struct WindComp {
         
         if let gust = gust {
             let gustComps = WindComp.runwayWinds(heading: heading, windSpeed: gust, windDirection: dir)
-            // TODO: "-" should only be added if speed val is not 0 or 1
             gustVerticalString = "-\(WindComp.headTailWinds(val: Int(gustComps.hw.rounded())).val)"
             let gustHoriComps = WindComp.crossWinds(val: Int(gustComps.xw.rounded()))
             gustHorizontalString = "-\(gustHoriComps.val)"
