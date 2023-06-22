@@ -158,6 +158,27 @@ public struct NOTAM: Decodable, Hashable {
     
     // MARK: - Init
     
+    public init(facilityDesignator: String?, icaoId: String?, icaoMessage: String?, traditionalMessage: String?, featureName: String?, notamNumber: String?, issueDate: String?, createdDate: Date?, startDate: String?, effectiveDate: Date?, endDate: String?, expirationDate: Date?, message: String?, comment: URL?, cleanText: String? = nil, type: NotamType, rawText: String? = nil, id: String? = nil) {
+        self.facilityDesignator = facilityDesignator
+        self.icaoId = icaoId
+        self.icaoMessage = icaoMessage
+        self.traditionalMessage = traditionalMessage
+        self.featureName = featureName
+        self.notamNumber = notamNumber
+        self.issueDate = issueDate
+        self.createdDate = createdDate
+        self.startDate = startDate
+        self.effectiveDate = effectiveDate
+        self.endDate = endDate
+        self.expirationDate = expirationDate
+        self.message = message
+        self.comment = comment
+        self.cleanText = cleanText
+        self.type = type
+        self.rawText = rawText
+        self.id = id
+    }
+    
     public init(from decoder: Decoder) throws {
         
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -445,7 +466,7 @@ public struct NOTAM: Decodable, Hashable {
     public static func hasZuluHourMins(word: String) -> (hour: Int, mins: Int)? {
         
         // Ignore "L" hours/mins since we can't really use local time, zulu only
-        guard !word.contains("L") else { return nil }
+        guard word.contains("Z") else { return nil }
         
         // strip of non num characters
         let result = word.filter("0123456789".contains)
@@ -460,15 +481,17 @@ public struct NOTAM: Decodable, Hashable {
         return nil
     }
     
-    public static func isTimeFrameActive(message: String?) -> Bool {
+    /// Looks for a timeframe inside passed in message and only returns true if both Dates are valid and if current Date is within that range. Date entered is current date by default
+    public static func isTimeFrameActive(message: String?, date: Date = Date()) -> Bool {
         
-        guard let message = message else { return true }
+        guard let message = message else { return false }
                 
         let words = Array(message.split(separator: " "))
         let count = words.count
         var i = 0
         var startDate: Date?
         var endDate: Date?
+        var foundTimeframe = false
         
         let monthDict = ["JAN": 1, "JANUARY": 1,
                          "FEB": 2, "FEBRUARY": 2,
@@ -493,10 +516,11 @@ public struct NOTAM: Decodable, Hashable {
                 let monthKeyword = String(words[i+1])
                 let hourMinKeyword = String(words[i+2])
                 if let month = monthDict[monthKeyword] {
+                    foundTimeframe = true
                     if let hoursMins = hasZuluHourMins(word: hourMinKeyword) {
                         let timezone = TimeZone(abbreviation: "UTC")!
                         let cal = Calendar.current
-                        if let nextDateYear = Calendar.current.dateComponents([.year], from: Date()).year {
+                        if let nextDateYear = Calendar.current.dateComponents([.year], from: date).year {
                             let newDate = Calendar.current.date(from: DateComponents(calendar: cal,
                                                                                      timeZone: timezone,
                                                                                      year: nextDateYear,
@@ -518,24 +542,38 @@ public struct NOTAM: Decodable, Hashable {
             i += 1
         }
                 
-        if let start = startDate, let end = endDate {
-            let now = Date()
-            print("AD timeframe start: \(start) end: \(end)")
-            if now >= start && now < end {
-                return true
-            } else { return false }
+        if foundTimeframe {
+            if let start = startDate, let end = endDate {
+                let now = Date()
+                if now >= start && now < end {
+                    print("start: \(start) end: \(end)")
+                    return true
+                }
+            }
+            
+            return false
         }
         
         return true
     }
 
     
-    // TODO: add more cases for multiple closed days in different formats like "MON/TUE/WED" or "MON WED FRI"
     // TODO: make this potentially return nil so we can tell if there was an error reading possible timeframe?
     // TODO: new format to watch out for: "AERODROME CLSD 27 MAY @ 0530L - 30 MAY @ 0530L" ???
-    /// Returns true if passed in NOTAM message contains timeframe keywords AND we're in the timeframe now. Also returns true if there's no timeframe at all (or if error)
-    public static func closedForTimeFrame(message: String?) -> Bool {
+    /// Returns true if passed in NOTAM message contains timeframe keywords AND we're in the timeframe now. Also returns true if there's no timeframe at all (or if error). Date entered is current date by default
+    public static func closedForTimeFrame(message: String?, date: Date = Date()) -> Bool {
         
+        // TODO: go through scooping up each weekday keyword we find into an Array?
+        // TODO: also check if current word has "/" in it so we can break that up and add to Array (if all keywords)
+        
+        // TODO: stop checking if hour strings are always directly after first weekday keyword
+        // TODO: twoTimes String should have a "-" in middle AND start/end Strings should use hasZuluHoursMins
+        
+        // TODO: add daylight savings offset (if in daylight savings time)
+        // TODO: what if the times are like 2300 - 0200 ?
+        
+        // TODO: notamComps doesn't have to be outside of loop scope?
+
         guard let word = message else { return true }
                 
         let daysDictionary: [String: Set<Int>] = ["SUN": [1], "SUNDAY": [1],
@@ -555,28 +593,88 @@ public struct NOTAM: Decodable, Hashable {
         var i = 0
         let wordsCount = words.count
         
+        let timezone = Calendar.current.timeZone
+        let secondsToAdd = -Double(timezone.secondsFromGMT())
+        let notamComps = Calendar.current.dateComponents([.weekday, .hour, .minute],
+                                                           from: date.addingTimeInterval(secondsToAdd))
+        
+        var weekdayInts = [Int]()
+        var timeFrameWord = ""
+        
         while i < wordsCount {
             let wordString = "\(words[i])"
             
-            // if we find keyword AND its weekday Ints match the current day's weekday Int
-            if let weekdayInts = daysDictionary[wordString], i + 1 < wordsCount {
-                hasTimeFrame = true
-                
-                print("weekday keyword: \(wordString) next word is \(words[i+1])")
-
-                let secondsToAdd = -Double(Calendar.current.timeZone.secondsFromGMT())
-                let notamComps = Calendar.current.dateComponents([.weekday, .hour, .minute],
-                                                                   from: Date().addingTimeInterval(secondsToAdd))
-                let twoTimes = Array(words[i+1].split(separator: "-"))
-                
-                guard let notamWeekday = notamComps.weekday, let notamHourInt = notamComps.hour, let notamMinInt = notamComps.minute, let nowTimeframe = Int("\(notamHourInt)\(notamMinInt < 10 ? "0\(notamMinInt)" : "\(notamMinInt)")") else {
-                    print("guard")
-                    return true
+            // check for multi-days separated by "/"
+            if wordString.contains("/") {
+                // TODO: split by "/" and see if we can add all substrings to list of days mentioned
+                let multiWords = Array(wordString.split(separator: "/"))
+                for word in multiWords {
+                    if let weekdayKeywordInts = daysDictionary["\(word)"] {
+                        print("found weekday: \(word)")
+                        for keyword in weekdayKeywordInts {
+                            weekdayInts.append(keyword)
+                        }
+                    }
                 }
                 
-                if weekdayInts.contains(notamWeekday), twoTimes.count == 2, let start = Int(twoTimes[0]), let end = Int(twoTimes[1]) {
-                    // TODO: what if the times are like 2300 - 0200 ?
-                    if nowTimeframe >= start && nowTimeframe <= end {
+                // now check word directly after multi-day String with "/"
+                if !weekdayInts.isEmpty, i + 1 < wordsCount {
+                    hasTimeFrame = true
+                    let foundDays = Set(weekdayInts)
+                    let twoTimes = Array(words[i+1].split(separator: "-"))
+                    
+                    guard let notamWeekday = notamComps.weekday, let notamHourInt = notamComps.hour, let notamMinInt = notamComps.minute, let nowTimeframe = Int("\(notamHourInt)\(notamMinInt < 10 ? "0\(notamMinInt)" : "\(notamMinInt)")") else {
+                        return false
+                    }
+                    
+                    if foundDays.contains(notamWeekday), twoTimes.count == 2, let start = Int(twoTimes[0]), let end = Int(twoTimes[1]) {
+                        if withinTimeFrame(start: start, end: end, now: nowTimeframe)  {
+                            closedAtThisTime = true
+                            return true
+                        } else { break }
+                    } else { break }
+                }
+            }
+            
+            // if we find keyword AND its weekday Ints match the current day's weekday Int
+            if let weekdays = daysDictionary[wordString], i + 1 < wordsCount {
+                hasTimeFrame = true
+                var j = i + 1
+                
+                // add first weekday we find (could be the only one or the first of many)
+                for weekdayInt in weekdays {
+                    weekdayInts.append(weekdayInt)
+                }
+                
+                print("found single weekday: \(weekdayInts)")
+                while j < wordsCount {
+                    print("started counting weekdays")
+                    let currWord = String(words[j])
+                    if let newDay = daysDictionary[currWord] {
+                        print("newDay: \(newDay)")
+                        for dayInt in newDay {
+                            weekdayInts.append(dayInt)
+                        }
+                    } else {
+                        print("j was: \(j) when breaking out")
+                        print("weekdayInts: \(Set(weekdayInts))")
+                        // j should be index of timeframe
+                        timeFrameWord = currWord
+                        break
+                    }
+                    
+                    j += 1
+                }
+                
+                let twoTimes = Array(timeFrameWord.split(separator: "-"))
+                let foundDays = Set(weekdayInts)
+                
+                guard let notamWeekday = notamComps.weekday, let notamHourInt = notamComps.hour, let notamMinInt = notamComps.minute, let nowTimeframe = Int("\(notamHourInt)\(notamMinInt < 10 ? "0\(notamMinInt)" : "\(notamMinInt)")") else {
+                    return false
+                }
+                
+                if foundDays.contains(notamWeekday), twoTimes.count == 2, let start = Int(twoTimes[0]), let end = Int(twoTimes[1]) {
+                    if withinTimeFrame(start: start, end: end, now: nowTimeframe) {
                         closedAtThisTime = true
                     } else { break }
                 } else { break }
@@ -594,6 +692,19 @@ public struct NOTAM: Decodable, Hashable {
         }
         
         return false
+    }
+    
+    static public func withinTimeFrame(start: Int, end: Int, now: Int) -> Bool {
+        
+        // if start is MORE than end (2200-0900)
+        if start > end {
+            return now >= start || now <= end
+        }
+        
+        // if start is LESS than end (0000-2359)
+        else {
+            return now >= start && now <= end
+        }
     }
     
     static public func getRunwayEnds(text: String?) -> (whole: String?, single: String?) {
