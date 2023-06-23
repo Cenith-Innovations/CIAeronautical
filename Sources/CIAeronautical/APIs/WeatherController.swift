@@ -194,7 +194,7 @@ public class WeatherController: ObservableObject {
         
         let airfieldsString = icaos.joined(separator: ",")
         
-        let url = URL(string: "https://www.aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=2&mostRecentForEachStation=true&stationString=\(airfieldsString)")!
+        let url = URL(string: "https://www.aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=4&mostRecentForEachStation=true&stationString=\(airfieldsString)")!
         
         let request = URLRequest(url: url)
         let task = URLSession.shared.dataTask(with: request) { [weak self] (data, _, error) in
