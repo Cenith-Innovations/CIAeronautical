@@ -79,7 +79,7 @@ public class MetarParser: NSObject, ObservableObject, XMLParserDelegate {
                                windDirDegrees: metar[MetarField.windDirDegrees.rawValue].toDouble,
                                windSpeedKts: metar[MetarField.windSpeedKts.rawValue].toDouble,
                                windGustKts: metar[MetarField.windGustKts.rawValue].toDouble,
-                               visibilityStatuteMiles: metar[MetarField.visibilityStatuteMiles.rawValue].toDouble ?? 0,
+                               visibilityStatuteMiles: metar[MetarField.visibilityStatuteMiles.rawValue].toDouble,
                                altimeterInHg: metar[MetarField.altimeterInHg.rawValue].toDouble ?? 0,
                                seaLevelPressureMb: metar[MetarField.seaLevelPressureMb.rawValue].toDouble ?? 0,
                                qualityControlFlags: metar[MetarField.qualityControlFlags.rawValue] ?? "",

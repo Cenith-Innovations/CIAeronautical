@@ -12,7 +12,7 @@ import Foundation
 public struct Metar: Hashable, Loopable {
     public static var DummySkyConditions: [SkyCondition] = [
         SkyCondition(skyCover: "FEW", cloudBaseFtAgl: 500),
-        SkyCondition(skyCover: "OVC", cloudBaseFtAgl: 700)
+        SkyCondition(skyCover: "OVC", cloudBaseFtAgl: 700, cloudType: "CB")
     ]
     
     public static var DummyMETAR = Metar(rawText: "KBAB 130158Z AUTO 18010KT 10SM CLR 17/M01 A3008 RMK AO2 SLP189 T01661006 $",
@@ -51,7 +51,7 @@ public struct Metar: Hashable, Loopable {
     }
     
     // TODO: why were these not taking in optional values?
-    public init(rawText: String, stationId: String, observationTime: Date?, latitude: Double, longitude: Double, tempC: Double, dewPointC: Double, windDirDegrees: Double?, windSpeedKts: Double?, windGustKts: Double?, visibilityStatuteMiles: Double, altimeterInHg: Double, seaLevelPressureMb: Double, qualityControlFlags: String, wxString: String?, skyConditions: [SkyCondition]?, flightCategory: String, threeHrPressureTendencyMb: String?, maxTempPastSixHoursC: Double, minTempPastSixHoursC: Double, maxTemp24HrC: Double, minTemp24HrC: Double, precipIn: Double, precipLast3HoursIn: Double, precipLast6HoursIn: Double, precipLast24HoursIn: Double, snowIn: Double, vertVisFt: Double, metarType: String?, elevationM: Double) {
+    public init(rawText: String, stationId: String, observationTime: Date?, latitude: Double, longitude: Double, tempC: Double, dewPointC: Double, windDirDegrees: Double?, windSpeedKts: Double?, windGustKts: Double?, visibilityStatuteMiles: Double?, altimeterInHg: Double, seaLevelPressureMb: Double, qualityControlFlags: String, wxString: String?, skyConditions: [SkyCondition]?, flightCategory: String, threeHrPressureTendencyMb: String?, maxTempPastSixHoursC: Double, minTempPastSixHoursC: Double, maxTemp24HrC: Double, minTemp24HrC: Double, precipIn: Double, precipLast3HoursIn: Double, precipLast6HoursIn: Double, precipLast24HoursIn: Double, snowIn: Double, vertVisFt: Double, metarType: String?, elevationM: Double) {
         self.rawText = rawText
         self.stationId = stationId
         self.observationTime = observationTime
@@ -82,7 +82,7 @@ public struct Metar: Hashable, Loopable {
         self.vertVisFt = vertVisFt
         self.metarType = metarType
         self.elevationM = elevationM
-        
+        self.cleanWxString = WX.cleanWxString(wx: wxString)
         self.hasVariableWind = WX.getVrbWind(rawText: rawText)
     }
     
@@ -117,7 +117,7 @@ public struct Metar: Hashable, Loopable {
     public var vertVisFt: Double?
     public var metarType: String?
     public var elevationM: Double?
-    
+    public let cleanWxString: String?
     public var hasVariableWind: Bool
     // TODO: also add varWindsRange?
 }
