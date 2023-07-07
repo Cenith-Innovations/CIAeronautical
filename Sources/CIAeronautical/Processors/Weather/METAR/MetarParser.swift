@@ -18,9 +18,12 @@ public class MetarParser: NSObject, ObservableObject, XMLParserDelegate {
     private var currentValue: String?
     public var metars: [Metar] = []
     
+    // TODO: add icing + turbulence?
+    var skyConditions: [SkyCondition] = []
+    var skyConditionsDict: [String: [SkyCondition]] = [:]
+    
     convenience init(data: Data) {
         self.init()
-        //        let str = String(data: data, encoding: .utf8)
         let parser = XMLParser(data: data)
         parser.delegate = self
         let _ = parser.parse()
@@ -47,9 +50,6 @@ public class MetarParser: NSObject, ObservableObject, XMLParserDelegate {
         currentValue? += string
     }
     
-    // TODO: move these to top and also add icing + turbulence?
-    var skyConditions: [SkyCondition] = []
-    var skyConditionsDict: [String: [SkyCondition]] = [:]
     public func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         if elementName == metar {
             results!.append(currentMetar!)
@@ -83,7 +83,7 @@ public class MetarParser: NSObject, ObservableObject, XMLParserDelegate {
                                altimeterInHg: metar[MetarField.altimeterInHg.rawValue].toDouble ?? 0,
                                seaLevelPressureMb: metar[MetarField.seaLevelPressureMb.rawValue].toDouble ?? 0,
                                qualityControlFlags: metar[MetarField.qualityControlFlags.rawValue] ?? "",
-                               wxString: metar[MetarField.wxString.rawValue] ?? "",
+                               wxString: metar[MetarField.wxString.rawValue],
                                skyConditions: skyConditionsDict[metar[MetarField.stationId.rawValue] ?? ""] ?? [],
                                flightCategory: metar[MetarField.flightCategory.rawValue] ?? "",
                                threeHrPressureTendencyMb: metar[MetarField.threeHrPressureTendencyMb.rawValue] ?? "",

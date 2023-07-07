@@ -10,6 +10,11 @@ import Foundation
 
 /// METAR... Meteorological conditions
 public struct Metar: Hashable, Loopable {
+    
+    public static func == (lhs: Metar, rhs: Metar) -> Bool {
+        return lhs.rawText == rhs.rawText
+    }
+    
     public static var DummySkyConditions: [SkyCondition] = [
         SkyCondition(skyCover: "FEW", cloudBaseFtAgl: 500),
         SkyCondition(skyCover: "OVC", cloudBaseFtAgl: 700, cloudType: "CB")
@@ -82,8 +87,13 @@ public struct Metar: Hashable, Loopable {
         self.vertVisFt = vertVisFt
         self.metarType = metarType
         self.elevationM = elevationM
-        self.cleanWxString = WX.cleanWxString(wx: wxString)
+        
+        self.allWx = WX.allWx(rawText: rawText,
+                              visibility: visibilityStatuteMiles,
+                              wxString: wxString,
+                              skyConditions: skyConditions)//WX.cleanWxString(wx: wxString)
         self.hasVariableWind = WX.getVrbWind(rawText: rawText)
+        self.rvrComps = WX.lowVisWx(rawText: rawText, visibility: visibilityStatuteMiles)
     }
     
     public var id = UUID()
@@ -117,7 +127,10 @@ public struct Metar: Hashable, Loopable {
     public var vertVisFt: Double?
     public var metarType: String?
     public var elevationM: Double?
-    public let cleanWxString: String?
+    
+    // Custom properties
+    public let allWx: String?
     public var hasVariableWind: Bool
+    public let rvrComps: [WX.RVR]?
     // TODO: also add varWindsRange?
 }

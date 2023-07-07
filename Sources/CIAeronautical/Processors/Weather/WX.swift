@@ -66,11 +66,16 @@ public struct WX {
         var i = 0
         
         while i < count && (i+1) < count {
+            
             let currAbrv = "\(words[i])\(words[i+1])"
             if let newWord = WX.weatherGroups[currAbrv] {
                 let comma = count - 2 == i ? "" : " "
                 result += newWord + comma
             }
+            
+            // return nil if word contains wx that can't be translated
+            else { return nil }
+            
             i += 2
         }
         
@@ -92,48 +97,198 @@ public struct WX {
             return String(final.joined(separator: " "))
         }
             
+        if result.isEmpty { return nil }
+        
         return result
     }
 
+    public static func cleanWxString(wx: String?) -> [String]? {
 
-    public static func cleanWxString(wx: String?) -> String? {
-        
         guard let wx = wx, !wx.isEmpty else { return nil }
-        
-        var result = ""
-        
+
+        var result = [String]()
+
         let words = Array(wx.split(separator: " "))
         let count = words.count
-        
+
         for i in 0..<count {
-            
+
+            if words[i] == "-TSRA" {
+                result = ["Thunderstorms, Light Rain"]
+                break
+            }
+
             var intensity = ""
             var wordArray = Array(words[i])
             let first = wordArray[0]
-            
+
             // Heavy
             if first == "+" {
                 intensity += "Heavy "
                 wordArray.remove(at: 0)
             }
-            
+
             // Light
             else if first == "-" {
                 intensity += "Light "
                 wordArray.remove(at: 0)
             }
-            
+
             // TODO: remove "DSNT" the same way "-" and "+" are removed?
             // TODO: "+FC" is Tornado instead of Heavy Funnel Clouds
-                    
-            let comma = count - 1 == i ? "" : ", "
+
             guard let cleanWx = cleanWx(word: String(wordArray)) else { return nil }
-            result += intensity + cleanWx + comma
+
+            result.append(intensity + cleanWx)
         }
+
+        if result.isEmpty { return nil }
+
+        return result
+    }
+    
+    /// Returns all weather using passed in rawText, visibility, wxString, and skyConditions
+    public static func allWx(rawText: String?, visibility: Double?, wxString: String?, skyConditions: [SkyCondition]?) -> String? {
+        
+        var result = [String]()
+
+        // low vis
+        if lowVisWx(rawText: rawText, visibility: visibility) != nil { result += ["Low Vis"] }
+        
+        // wxString
+        if let wx = cleanWxString(wx: wxString) { result += wx }
+        
+        // use untranslated version of wxString if we're unable to translate it
+        else if let backupWxString = wxString { result += [backupWxString] }
+        
+        // cloud types
+        if let cloudTypes = cloudTypeWx(skyConditions: skyConditions) { result += cloudTypes }
+        
+        if result.isEmpty { return nil }
+        
+        return result.joined(separator: ", ")
+    }
+    
+    // MARK: - Low Vis
+    
+    /// Takes in String representing RVR range and returns String describing range value using approriate units. Ex: "1200V1400FT" -> "1200\' to 1400\''"
+    public static func rvrString(word: String) -> String {
+        
+        // can be "'" if we find "FT" in RVR String
+        let units = word.contains("FT") ? "\'" : "m"
+        var result = word
+        
+        // Remove non number characters
+        let strippedWord = word.filter("0123456789".contains)
+        
+        // start out as just word with nums only
+        var newWord = strippedWord
+        
+        // Try converting to an Int
+        if let wordInt = Int(newWord) { newWord = String(wordInt) }
+        
+        // make sure newWord isn't empty
+        guard !newWord.isEmpty else { return result }
+        
+        // 1. "V" means we try to split to get range
+        if word.contains("V") {
+            let wordParts = word.split(separator: "V")
+            guard wordParts.count == 2,
+                  let low = Int(String(wordParts[0].filter("0123456789".contains))),
+                  let high = Int(String(wordParts[1].filter("0123456789".contains))) else { return result }
+            
+            return "\(low)\(units) to \(high)\(units)"
+        }
+        
+        // 2. "M" means "Less than X"
+        else if word.contains("M") { return "Less than \(newWord)" + units }
+        
+        // 3. "P" means "Greater than X"
+        else if word.contains("P") { return "Greater than \(newWord)" + units }
+        
+        // 4. If no letter, use single value
+        else { result = newWord + units }
         
         return result
     }
     
+    /// Takes in String representing RVR and returns name and range components. Ex: "15/1200V1400FT" -> name: "Rwy 15 RVR" value: "1200' to 1400'"
+    public static func rvrComponents(rvr: String) -> RVR? {
+        // "Rwy 15 RVR" + "1200' to 1400'"
+        
+        let parts = rvr.split(separator: "/")
+        let partsCount = parts.count
+        
+        guard partsCount == 2 else { return nil }
+        
+        let firstPart = String(parts[0])
+        let secondPart = String(parts[1])
+        
+        let name = "Rwy \(firstPart) RVR"
+        let range = rvrString(word: secondPart)
+        
+        return RVR(runway: name, range: range)
+    }
+    
+    /// Takes in rawText and visibility to return possible RVRs. Vis needs to be 1SM or less for rawText to be checked for "R" Strings.
+    public static func lowVisWx(rawText: String?, visibility: Double?) -> [RVR]? {
+        
+        // only check for "R" Strings if vis is less than 1 SM
+        guard let text = rawText, let vis = visibility, vis <= 1.0 else { return nil }
+        
+        var results = [RVR]()
+        
+        // go through each word in text and look for any that start with "R" and have a "/"
+        let words = text.split(separator: " ")
+        for word in words {
+            let curr = Array(word)
+            let currCount = curr.count
+            if currCount > 1, curr[0] == "R", word.contains("/") {
+                var rvr = curr
+                // remove "R" so word only has rwy name / rwy range
+                rvr.remove(at: 0)
+                let newWord = String(rvr)
+                if let rvrComps = rvrComponents(rvr: newWord) {
+                    results.append(rvrComps)
+                }
+            }
+        }
+        
+        if results.isEmpty { return nil }
+        
+        return results
+    }
+    
+    public struct RVR: Equatable, Hashable {
+        public let runway: String
+        public let range: String
+    }
+    
+    // MARK: - Cloud Types
+    
+    // TODO: sometimes skyConditions don't have cloudType but they are inside rawText (ex: OVC013CB for ULWC)
+    /// Takes in SkyConditions and returns an array of Strings if we find TCU or CB cloudTypes
+    public static func cloudTypeWx(skyConditions: [SkyCondition]?) -> [String]? {
+        
+        guard let conditions = skyConditions else { return nil }
+        
+        var cloudTypeDict = ["CB": "Cumulonimbus", "TCU": "Towering Cumulus"]
+        
+        var result = [String]()
+        
+        for condition in conditions {
+            if let cloudType = condition.cloudType, let foundType = cloudTypeDict[cloudType] {
+                result.append(foundType)
+                // remove from dict so we only add one of each type
+                cloudTypeDict[cloudType] = nil
+            }
+        }
+        
+        if result.isEmpty { return nil }
+        
+        return result
+    }
+        
     /// "KBAB"
     public static let kbabIcao = "KBAB"
 
@@ -981,7 +1136,7 @@ public struct WX {
                 
         // WX (if any)
         if let weatherString = forecast.wxString, !weatherString.isEmpty {
-            let cleanWx = WX.cleanWxString(wx: weatherString) ?? weatherString
+            let cleanWx = forecast.allWx ?? weatherString
             if cleanWx.count > 12 {
                 wxOrCloud = weatherString
             } else {
@@ -1008,13 +1163,12 @@ public struct WX {
     
     // MARK: - METAR Helpers
     
-    // TODO: add default parameter so this can also just return how many minutes ago without including observation time?
-    /// Returns METAR observation time (local timezone) and how many minutes old a METAR is along with a color. Ex" "1450L (32m)"
-    public static func metarTime(metar: Metar?) -> (timeString: String, color: Color) {
+    /// Returns components for passed in time (local timezone) and how many minutes old it is along with a color. Ex" "1450L (32m)". Observation time or issue time
+    public static func timestampComps(date: Date?) -> (timeString: String, color: Color) {
         var timeString = "NA"
         var color = Color.gray
         
-        guard let time = metar?.observationTime else { return (timeString, color) }
+        guard let time = date else { return (timeString, color) }
         
         let date = DateFormatter.localHourMinsTimeFormatter.string(from: time) + "L"
         let now = Date()

@@ -54,7 +54,37 @@ public struct Forecast: Hashable   {
     /// TAF.rawText is broken up and each part is assigned to its respective Forecast based on index order
     public var rawText: String?
     
+    public let allWx: String?
+    
     public static let changeIndicatorsDict = ["TEMPO": "Temporary", "BECMG": "Gradual"]
+    
+    public init(forecastTimeFrom: Date? = nil, forecastTimeTo: Date? = nil, changeIndicator: String? = nil, timeBecoming: Date? = nil, probability: Int? = nil, windDirDegrees: Double? = nil, windSpeedKts: Double? = nil, windGustKts: Double? = nil, windShearHeightFtAGL: Int? = nil, windShearDirDegrees: Double? = nil, windShearSpeedKts: Double? = nil, visibilityStatuteMiles: Double? = nil, altimeterInHg: Double? = nil, verticleVisFt: Double? = nil, wxString: String? = nil, notDecoded: String? = nil, skyConditions: [SkyCondition]? = nil, turbulenceCondition: [TurbulanceCondition]? = nil, icingConditions: [IcingCondition]? = nil, rawText: String? = nil) {
+        self.forecastTimeFrom = forecastTimeFrom
+        self.forecastTimeTo = forecastTimeTo
+        self.changeIndicator = changeIndicator
+        self.timeBecoming = timeBecoming
+        self.probability = probability
+        self.windDirDegrees = windDirDegrees
+        self.windSpeedKts = windSpeedKts
+        self.windGustKts = windGustKts
+        self.windShearHeightFtAGL = windShearHeightFtAGL
+        self.windShearDirDegrees = windShearDirDegrees
+        self.windShearSpeedKts = windShearSpeedKts
+        self.visibilityStatuteMiles = visibilityStatuteMiles
+        self.altimeterInHg = altimeterInHg
+        self.verticleVisFt = verticleVisFt
+        self.wxString = wxString
+        self.notDecoded = notDecoded
+        self.skyConditions = skyConditions
+        self.turbulenceCondition = turbulenceCondition
+        self.icingConditions = icingConditions
+        self.rawText = rawText
+        
+        self.allWx = WX.allWx(rawText: rawText,
+                              visibility: visibilityStatuteMiles,
+                              wxString: wxString,
+                              skyConditions: skyConditions)
+    }
     
     public static var DummySkyConditions: [SkyCondition] = [
         SkyCondition(skyCover: "FEW", cloudBaseFtAgl: 6000),
