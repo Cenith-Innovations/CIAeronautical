@@ -4,7 +4,7 @@ import XCTest
 final class CIAeronauticalTests: XCTestCase {
     
     func testNOTAMTimeframes() {
-        let notam = NOTAM(facilityDesignator: "BAB", icaoId: "KBAB", icaoMessage: "NOT AVAILABLE", traditionalMessage: "WED 2200-0400", featureName: "Runway", notamNumber: "01/001", issueDate: "06/03/2023 0205", createdDate: Date(), startDate: "06/03/2023 0205", effectiveDate: Date().addingTimeInterval(-2400), endDate: "06/03/2023 0205", expirationDate: Date().addingTimeInterval(2400), message: "AERODROME CLSD 19 JUN 0530Z - 30 JUN 2230Z", comment: nil, type: .none)
+        let notam = NOTAM(facilityDesignator: "BAB", icaoId: "KBAB", icaoMessage: "NOT AVAILABLE", traditionalMessage: "WED 2200-0400", featureName: "Runway", notamNumber: "01/001", issueDate: "06/03/2023 0205", createdDate: Date(), startDate: "06/03/2023 0205", effectiveDate: Date().addingTimeInterval(-2400), endDate: "06/03/2023 0205", expirationDate: Date().addingTimeInterval(2400), message: "AERODROME CLSD 19 JUN 0530Z - 30 JUL 2230Z", comment: nil, type: .none)
         let result = NOTAM.isTimeFrameActive(message: notam.message)
         XCTAssertTrue(result)
     }
@@ -12,12 +12,12 @@ final class CIAeronauticalTests: XCTestCase {
     func testClosedForTimeFrame() {
         
         // Single day
-        let message1 = "RWY 15/33 CLSD THU 0000-2359"
+        let message1 = "RWY 15/33 CLSD FRI 0000-2359"
         let test1 = NOTAM.closedForTimeFrame(message: message1)
         XCTAssertTrue(test1)
         
 //        // End time is next day (2200-0500)
-        let message2 = "RWY 15/33 CLSD THU 2200-1900"
+        let message2 = "RWY 15/33 CLSD FRI 0200-2300"
         let test2 = NOTAM.closedForTimeFrame(message: message2)
         XCTAssertTrue(test2)
 //        
@@ -46,7 +46,7 @@ final class CIAeronauticalTests: XCTestCase {
         let test2 = NOTAM.isTimeFrameActive(message: message2)
         XCTAssertFalse(test2)
         
-        let message3 = "AERODROME CLSD 20 JUN 0000L TO 25 JUN 0600L (20 JUN 0700Z TO 25 JUN 1300Z)."
+        let message3 = "AERODROME CLSD 20 JUN 0000L TO 25 JUN 0600L (20 JUN 0700Z TO 25 JUL 1300Z)."
         let test3 = NOTAM.isTimeFrameActive(message: message3)
         XCTAssertTrue(test3)
     }
@@ -95,12 +95,31 @@ final class CIAeronauticalTests: XCTestCase {
         XCTAssertEqual(test5, "Thunderstorms, Light Rain")
     }
     
-    func testCloudTypeWx() {
-        let skyConditions = [SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 20000, cloudType: "CB"),
-                             SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 25000, cloudType: "TCU"),
-                             SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 30000, cloudType: "CB")]
-        let test = WX.cloudTypeWx(skyConditions: skyConditions)
-        XCTAssertEqual(test, ["Cumulonimbus", "Towering Cumulus"])
+    func testCloudTypeWx() throws {
+        
+        // TCU only
+        let test = WX.cloudTypeWx(rawText: "KCLT 071852Z VRB06KT 10SM SCT055TCU BKN250 34/20 A2987 RMK AO2 LTG DSNT S SLP119 TCU SE-S AND DSNT E AND NW T03440200")
+        XCTAssertEqual(test, ["Towering Cumulus"])
+        
+        // CB only
+        let test1 = WX.cloudTypeWx(rawText: "KCLT 071852Z VRB06KT 10SM SCT055CB BKN250 34/20 A2987 RMK AO2 LTG DSNT S SLP119 TCU SE-S AND DSNT E AND NW T03440200")
+        XCTAssertEqual(test1, ["Cumulonimbus"])
+        
+        // TCU and CB
+        let test2 = WX.cloudTypeWx(rawText: "KCLT 071852Z VRB06KT 10SM SCT055TCU BKNCB BKN250 34/20 A2987 RMK AO2 LTG DSNT S SLP119 TCU SE-S AND DSNT E AND NW T03440200")
+        XCTAssertEqual(test2, ["Towering Cumulus", "Cumulonimbus"])
+        
+        // TCU and CB with extra CB
+        let test3 = WX.cloudTypeWx(rawText: "KCLT 071852Z VRB06KT 10SM SCT055TCU BKN250CB BKN300CB 34/20 A2987 RMK AO2 LTG DSNT S SLP119 TCU SE-S AND DSNT E AND NW T03440200")
+        XCTAssertEqual(test3, ["Towering Cumulus", "Cumulonimbus"])
+        
+        // no cloud types
+        let test4 = WX.cloudTypeWx(rawText: "KCLT 071852Z VRB06KT 10SM SCT055 BKN250 BKN300 34/20 A2987 RMK AO2 LTG DSNT S SLP119 TCU SE-S AND DSNT E AND NW T03440200")
+        XCTAssertEqual(test4, nil)
+        
+        // no cloud feet
+        let test5 = WX.cloudTypeWx(rawText: "KCLT 071852Z VRB06KT 10SM SCT 34/20 A2987 RMK AO2 LTG DSNT S SLP119 TCU SE-S AND DSNT E AND NW T03440200")
+        XCTAssertEqual(test5, nil)
     }
 
     func testlowVisWx() throws {
@@ -146,38 +165,36 @@ final class CIAeronauticalTests: XCTestCase {
     }
     
     func testAllWx() throws {
-        let rawText = "METAR KBAB 210255Z AUTO 18006KT 1/8SM R23L/0500FT HZ CLR 24/16 A2995 RMK AO2 SLP145 T02420157 55000 $"
+        let rawText = "METAR KBAB 210255Z AUTO 18006KT 1/8SM R23L/0500FT HZ SCT055CB BKN200TCU 24/16 A2995 RMK AO2 SLP145 T02420157 55000 $"
         let visibility = 0.8
         let wxString = "BR HZ"
-        let skyConditions = [SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 20000, cloudType: "CB"),
-                                                 SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 25000, cloudType: "TCU"),
-                                                 SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 30000, cloudType: "CB")]
         
-        let example = WX.allWx(rawText: rawText, visibility: visibility, wxString: wxString, skyConditions: skyConditions)
+        let example = WX.allWx(rawText: rawText, visibility: visibility, wxString: wxString)
         let test = try XCTUnwrap(example)
         XCTAssertEqual(test, "Low Vis, Mist, Haze, Cumulonimbus, Towering Cumulus")
     }
     
     func testAllWxUncleanWxString() throws {
-        let rawText = "METAR KBAB 210255Z AUTO 18006KT 1/8SM R15/1200V1400FT HZ CLR 24/16 A2995 RMK AO2 SLP145 T02420157 55000 $"
+        let rawText = "METAR KBAB 210255Z AUTO 18006KT 1/8SM R15/1200V1400FT HZ SCT055CB 24/16 A2995 RMK AO2 SLP145 T02420157 55000 $"
         let visibility = 0.8
         let wxString = "XX ZZ"
-        let skyConditions = [SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 20000, cloudType: "CB"),
-                                                 SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 25000),
-                                                 SkyCondition(skyCover: "BKN", cloudBaseFtAgl: 30000, cloudType: "CB")]
         
-        let example = WX.allWx(rawText: rawText, visibility: visibility, wxString: wxString, skyConditions: skyConditions)
+        let example = WX.allWx(rawText: rawText, visibility: visibility, wxString: wxString)
         let test = try XCTUnwrap(example)
         XCTAssertEqual(test, "Low Vis, XX ZZ, Cumulonimbus")
     }
     
     func testAllWxNoWx() throws {
-        let rawText = "METAR KBAB 210255Z AUTO 18006KT 6SM CLR 24/16 A2995 RMK AO2 SLP145 T02420157 55000 $"
-        let visibility = 6.0
+//        let rawText = "METAR KBAB 210255Z AUTO 18006KT 6SM 24/16 A2995 RMK AO2 SLP145 T02420157 55000 $"
+//        let visibility = 6.0
+//
+//        let wxString: String? = nil
+//
+//        let test = WX.allWx(rawText: rawText, visibility: visibility, wxString: wxString)
+//        XCTAssertEqual(test, nil)
         
-        let wxString: String? = nil
-        
-        let test = WX.allWx(rawText: rawText, visibility: visibility, wxString: wxString, skyConditions: nil)
-        XCTAssertEqual(test, nil)
+        let test2 = WX.allWx(rawText: "TEMPO 0906/0912 34005G13MPS 4000 -TSRA BKN014CB ", visibility: 2.49, wxString: "-TSRA")
+        XCTAssertEqual(test2, "Thunderstorms, Light Rain, Cumulonimbus")
+        //WX.allWx(rawText: "TAF ULWC 090200Z 0903/0912 31003G08MPS 6000 BKN017 ", visibility: 3.73, wxString: nil)
     }
 }

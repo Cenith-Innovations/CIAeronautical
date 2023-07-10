@@ -148,7 +148,7 @@ public struct WX {
     }
     
     /// Returns all weather using passed in rawText, visibility, wxString, and skyConditions
-    public static func allWx(rawText: String?, visibility: Double?, wxString: String?, skyConditions: [SkyCondition]?) -> String? {
+    public static func allWx(rawText: String?, visibility: Double?, wxString: String?) -> String? {
         
         var result = [String]()
 
@@ -162,7 +162,7 @@ public struct WX {
         else if let backupWxString = wxString { result += [backupWxString] }
         
         // cloud types
-        if let cloudTypes = cloudTypeWx(skyConditions: skyConditions) { result += cloudTypes }
+        if let cloudTypes = cloudTypeWx(rawText: rawText) { result += cloudTypes }
         
         if result.isEmpty { return nil }
         
@@ -266,21 +266,47 @@ public struct WX {
     
     // MARK: - Cloud Types
     
-    // TODO: sometimes skyConditions don't have cloudType but they are inside rawText (ex: OVC013CB for ULWC)
     /// Takes in SkyConditions and returns an array of Strings if we find TCU or CB cloudTypes
-    public static func cloudTypeWx(skyConditions: [SkyCondition]?) -> [String]? {
+    public static func cloudTypeWx(rawText: String?) -> [String]? {
         
-        guard let conditions = skyConditions else { return nil }
+        guard let raw = rawText else { return nil }
         
         var cloudTypeDict = ["CB": "Cumulonimbus", "TCU": "Towering Cumulus"]
+        let skyCoverSet = Set(["FEW", "SCT", "BKN", "OVC", "OVX"])
         
         var result = [String]()
+        let words = raw.split(separator: " ")
         
-        for condition in conditions {
-            if let cloudType = condition.cloudType, let foundType = cloudTypeDict[cloudType] {
-                result.append(foundType)
-                // remove from dict so we only add one of each type
-                cloudTypeDict[cloudType] = nil
+        for word in words {
+            let curr = String(word)
+            let wordArray = Array(word)
+            let wordCount = wordArray.count
+            // don't look after we find RMK
+            if curr == "RMK" { break }
+            
+            guard wordCount > 2 else { continue }
+            
+            let firstLetters = "\(wordArray[0])\(wordArray[1])\(wordArray[2])"
+            
+            // found a sky condition String
+            if skyCoverSet.contains(firstLetters) {
+                // now check last 2 or 3 chars
+                let thirdLast = String(wordArray[wordCount - 1])
+                let secondLast = String(wordArray[wordCount - 2])
+                let firstLast = String(wordArray[wordCount - 3])
+                
+                let lastTwoChars = secondLast + thirdLast
+                let lastThreeChars = firstLast + lastTwoChars
+                
+                if let possibleCB = cloudTypeDict[lastTwoChars] {
+                    result.append(possibleCB)
+                    cloudTypeDict[lastTwoChars] = nil
+                }
+                
+                if let possibleTCU = cloudTypeDict[lastThreeChars] {
+                    result.append(possibleTCU)
+                    cloudTypeDict[lastThreeChars] = nil
+                }
             }
         }
         
@@ -1216,13 +1242,11 @@ public struct WX {
         
         if let rawText = rawText {
             let words = rawText.split(separator: " ")
-            var containsKT = false
             for word in words {
                 let newWord = word.uppercased()
-                if newWord.contains("KT") {
+                if newWord.contains("KT") || newWord.contains("MPS") {
                     // make sure its not the ICAO that has KT in it
                     if newWord.count > 4 {
-                        containsKT = true
                         if newWord.contains("VRB") {
                             return true
                         } else {
@@ -1232,10 +1256,8 @@ public struct WX {
                 }
             }
             
-            // if there's no wind string at all, its VRB
-            if !containsKT {
-                return true
-            }
+            // TODO: overseas airfields use "MPS" instead of VRB (ex: "28003G08MPS")
+            // TODO: TEMPO forecast are sometimes missing wind string
         }
         
         return false

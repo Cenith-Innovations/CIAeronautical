@@ -162,6 +162,9 @@ public class TafParser: NSObject, XMLParserDelegate {
                         while i < forecastsCount {
                             var forecastToAdd = forecasts[i]
                             forecastToAdd.rawText = rawTexts[i]
+                            forecastToAdd.allWx = WX.allWx(rawText: rawTexts[i],
+                                                           visibility: forecastToAdd.visibilityStatuteMiles,
+                                                           wxString: forecastToAdd.wxString)
                             newForecasts.append(forecastToAdd)
                             i += 1
                         }

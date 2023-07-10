@@ -90,8 +90,7 @@ public struct Metar: Hashable, Loopable {
         
         self.allWx = WX.allWx(rawText: rawText,
                               visibility: visibilityStatuteMiles,
-                              wxString: wxString,
-                              skyConditions: skyConditions)//WX.cleanWxString(wx: wxString)
+                              wxString: wxString)
         self.hasVariableWind = WX.getVrbWind(rawText: rawText)
         self.rvrComps = WX.lowVisWx(rawText: rawText, visibility: visibilityStatuteMiles)
     }

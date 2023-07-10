@@ -54,7 +54,7 @@ public struct Forecast: Hashable   {
     /// TAF.rawText is broken up and each part is assigned to its respective Forecast based on index order
     public var rawText: String?
     
-    public let allWx: String?
+    public var allWx: String?
     
     public static let changeIndicatorsDict = ["TEMPO": "Temporary", "BECMG": "Gradual"]
     
@@ -82,8 +82,7 @@ public struct Forecast: Hashable   {
         
         self.allWx = WX.allWx(rawText: rawText,
                               visibility: visibilityStatuteMiles,
-                              wxString: wxString,
-                              skyConditions: skyConditions)
+                              wxString: wxString)
     }
     
     public static var DummySkyConditions: [SkyCondition] = [
