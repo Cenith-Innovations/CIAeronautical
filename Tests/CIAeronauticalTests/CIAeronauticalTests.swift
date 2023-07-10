@@ -197,4 +197,14 @@ final class CIAeronauticalTests: XCTestCase {
         XCTAssertEqual(test2, "Thunderstorms, Light Rain, Cumulonimbus")
         //WX.allWx(rawText: "TAF ULWC 090200Z 0903/0912 31003G08MPS 6000 BKN017 ", visibility: 3.73, wxString: nil)
     }
+    
+    func testTafTime() {
+        let taf = Forecast.dummyTAF
+        let time = taf.timeAgoString(date: taf.validTimeFrom?.addingTimeInterval(-3660), type: .taf).text
+        XCTAssertEqual(time, "1h 1m ago")
+        
+        let taf2 = Forecast.dummyTAF
+        let time2 = taf2.timeAgoString(date: taf2.validTimeFrom?.addingTimeInterval(-120), type: .taf).text
+        XCTAssertEqual(time2, "2m ago")
+    }
 }

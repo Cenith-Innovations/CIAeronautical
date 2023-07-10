@@ -1189,33 +1189,33 @@ public struct WX {
     
     // MARK: - METAR Helpers
     
-    /// Returns components for passed in time (local timezone) and how many minutes old it is along with a color. Ex" "1450L (32m)". Observation time or issue time
-    public static func timestampComps(date: Date?) -> (timeString: String, color: Color) {
-        var timeString = "NA"
-        var color = Color.gray
-        
-        guard let time = date else { return (timeString, color) }
-        
-        let date = DateFormatter.localHourMinsTimeFormatter.string(from: time) + "L"
-        let now = Date()
-        let seconds = now.timeIntervalSinceReferenceDate - time.timeIntervalSinceReferenceDate
-        let minutes = Int(seconds / 60)
-        
-        switch minutes {
-        case 0..<5:
-            color = Color.green
-        case 5..<60:
-            color = Color.blue
-        case 60..<75:
-            color = Color.orange
-        default:
-            color = Color.red
-        }
-        
-        timeString = "\(date) (\(minutes)m)"
-        
-        return (timeString, color)
-    }
+//    /// Returns components for passed in time (local timezone) and how many minutes old it is along with a color. Ex" "1450L (32m)". Observation time or issue time
+//    public static func timestampComps(date: Date?) -> (timeString: String, color: Color) {
+//        var timeString = "NA"
+//        var color = Color.gray
+//
+//        guard let time = date else { return (timeString, color) }
+//
+//        let date = DateFormatter.localHourMinsTimeFormatter.string(from: time) + "L"
+//        let now = Date()
+//        let seconds = now.timeIntervalSinceReferenceDate - time.timeIntervalSinceReferenceDate
+//        let minutes = Int(seconds / 60)
+//
+//        switch minutes {
+//        case 0..<5:
+//            color = Color.green
+//        case 5..<60:
+//            color = Color.blue
+//        case 60..<75:
+//            color = Color.orange
+//        default:
+//            color = Color.red
+//        }
+//
+//        timeString = "\(date) (\(minutes)m)"
+//
+//        return (timeString, color)
+//    }
     
     // TODO: add default parameter so we can use filled in icons for certain cases?
     public static func iconNameForMetar(metar: Metar?, lat: Double?, long: Double?) -> String {
@@ -1277,5 +1277,69 @@ public struct WX {
         if speed == 0 { return false }
         
         return true
+    }
+    
+    public enum WeatherType {
+        case ahas
+        case aqi
+        case metar
+        case notam
+        case taf
+        case unknown
+    }
+}
+
+public protocol Weatherable {
+    func timeAgoString(date: Date?, type: WX.WeatherType) -> (text: String, color: Color)
+}
+
+extension Weatherable {
+    public func timeAgoString(date: Date?, type: WX.WeatherType) -> (text: String, color: Color) {
+                
+        var timeString = "NA"
+        var color = Color.gray
+        
+        guard let time = date else { return (timeString, color) }
+        
+        let date = DateFormatter.localHourMinsTimeFormatter.string(from: time) + "L"
+        let now = Date()
+        let seconds = now.timeIntervalSinceReferenceDate - time.timeIntervalSinceReferenceDate
+        let minutes = Int(seconds / 60)
+        let hours = Int(minutes / 60)
+        
+        if type == .metar {
+            switch minutes {
+            case 0..<5:
+                color = Color.green
+            case 5..<60:
+                color = Color.blue
+            case 60..<75:
+                color = Color.orange
+            default:
+                color = Color.red
+            }
+            
+            timeString = "\(date) (\(minutes)m)"
+        }
+        
+        if type == .taf {
+            switch minutes {
+            case 0..<5:
+                color = Color.green
+            case 5..<240:
+                color = Color.blue
+            case 240..<360:
+                color = Color.orange
+            default:
+                color = Color.red
+            }
+            
+            // 3h 40m ago
+            let hoursString = hours > 0 ? "\(hours)h " : ""
+            let minsString = minutes % 60
+            timeString = "\(hoursString)\(minsString)m ago"
+        }
+        
+        return (timeString, color)
     }
 }

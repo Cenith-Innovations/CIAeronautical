@@ -9,7 +9,7 @@
 import Foundation
 
 /// METAR... Meteorological conditions
-public struct Metar: Hashable, Loopable {
+public struct Metar: Hashable, Loopable, Weatherable {
     
     public static func == (lhs: Metar, rhs: Metar) -> Bool {
         return lhs.rawText == rhs.rawText

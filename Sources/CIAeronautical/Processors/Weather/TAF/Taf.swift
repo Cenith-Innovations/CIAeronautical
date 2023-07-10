@@ -10,7 +10,7 @@ import Foundation
 import CIFoundation
 
 /// TAF: Terminal Area Forcast
-public struct Taf: Identifiable, Loopable, Hashable {
+public struct Taf: Identifiable, Loopable, Hashable, Weatherable {
     public var id = UUID()
     public var rawText: String?
     public var stationId: String?

@@ -311,6 +311,26 @@ public class WeatherController: ObservableObject {
                                     
                                     guard let key = notam.facilityDesignator, facilitiesSet.contains(key) else {
                                         
+                                        // try looking at domestic message for "!" String if it has facility
+                                        if let domestic = notam.traditionalMessage {
+                                            let words = domestic.split(separator: " ")
+                                            if words.count > 1 {
+                                                let firstWord = String(words[0]).replacingOccurrences(of: "!", with: "")
+                                                print("firstWord: \(firstWord)")
+                                                
+                                                if facilitiesSet.contains(firstWord) {
+                                                    let newKey = "K\(firstWord)"
+                                                    if tempNotams[newKey] == nil {
+                                                        tempNotams[newKey] = [notam]
+                                                    } else {
+                                                        tempNotams[newKey]!.append(notam)
+                                                    }
+                                                    
+                                                    continue
+                                                }
+                                            }
+                                        }
+                                        
                                         // if this is a facility we didn't search for, add it to "?" Array
                                         if tempNotams["?"] == nil {
                                             tempNotams["?"] = [notam]
