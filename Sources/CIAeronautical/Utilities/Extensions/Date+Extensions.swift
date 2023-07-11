@@ -116,6 +116,15 @@ public extension Date {
         }
         
         return cal.date(from: comps)
+    }
+    
+    /// Takes in an optional Date and returns how many hours and minutes away it is
+    static func hourMinsComps(date: Date) -> (hours: Int, mins: Int) {
         
+        let seconds = Date().timeIntervalSinceReferenceDate - date.timeIntervalSinceReferenceDate
+        let minutes = Int(seconds / 60)
+        let hours = Int(minutes / 60)
+        
+        return (hours, minutes)
     }
 }

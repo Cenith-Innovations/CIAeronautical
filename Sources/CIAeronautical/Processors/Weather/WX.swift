@@ -1301,11 +1301,11 @@ extension Weatherable {
         
         guard let time = date else { return (timeString, color) }
         
+        let comps = Date.hourMinsComps(date: time)
         let date = DateFormatter.localHourMinsTimeFormatter.string(from: time) + "L"
-        let now = Date()
-        let seconds = now.timeIntervalSinceReferenceDate - time.timeIntervalSinceReferenceDate
-        let minutes = Int(seconds / 60)
-        let hours = Int(minutes / 60)
+        
+        let minutes = comps.mins
+        let hours = comps.hours
         
         if type == .metar {
             switch minutes {

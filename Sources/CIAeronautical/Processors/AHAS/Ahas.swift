@@ -7,6 +7,7 @@
 
 
 import Foundation
+import SwiftUI
 
 public enum AhasField: String, CaseIterable {
     case route = "Route"
@@ -41,6 +42,21 @@ public struct Ahas: Loopable, Hashable {
     public var alt4: String?
     public var alt5: String?
     public var dateFetched: Date
+    
+    // MARK: - Computed Porperties
+    
+    /// Returns components of AHAS timestamp only if it's 10 minutes or older. Returns ? in gray if no Date
+    public var timeAgoComps: (text: String, color: Color)? {
+        
+        guard let date = dateTime else { return ("?", Color.gray) }
+        
+        let timeComps = Date.hourMinsComps(date: date)
+        let mins = timeComps.mins
+        
+        if mins >= 10 { return ("\(mins)m", Color.red) }
+        
+        return nil
+    }
     
     /// 00, 06, 12, 18, 24, 30, 36, 42, 48, 54
     /// Returns if Ahas is old enough to need fetching again. Checks if we're inside same 6 minute interval or if dateFetched is older than 5 minutes

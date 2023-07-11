@@ -112,6 +112,25 @@ public struct AirQuality: Decodable, Hashable, Comparable {
     
     // MARK: - Computed Properties
     
+    /// Returns components of AirQuality timestamp (observation time) only if it's over 1 hour old. Returns nil if less than an hour old
+    public var timeAgoComps: (text: String, color: Color)? {
+        
+        guard let date = observationDate else { return ("?", Color.gray) }
+        
+        let timeComps = Date.hourMinsComps(date: date)
+        let mins = timeComps.mins
+        
+        if mins >= 75 {
+            return ("\(mins)m", Color.red)
+        }
+        
+        if mins >= 60 {
+            return ("\(mins)m", Color.orange)
+        }
+        
+        return nil
+    }
+    
     /// Returns an array of AirQuality that only contains the primary pollutant for each day's forecast
     static public func weeklyForecasts(forecasts: [AirQuality]) -> [String: [AirQuality]] {
         
