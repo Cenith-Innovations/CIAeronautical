@@ -279,11 +279,10 @@ public struct SunriseSunset {
     private enum DayPortion { case dawn, dusk }
     
     public init(lat: Double, long: Double, date: Date = Date()) {
-        print("SunriseSunset init")
         let location = CLLocationCoordinate2D(latitude: lat, longitude: long)
         self.date = date
         self.location = location
-        let timeZoneUTC = TimeZone(identifier: "UTC")!
+        let timeZoneUTC = Calendar.current.timeZone//TimeZone(identifier: "UTC")!
         self.timeZone = timeZoneUTC
         self.secondsFromGMT = Double(timeZoneUTC.secondsFromGMT(for: date) / (3600))
         sunRise = sunTimes(dayPortion: .dawn, twilight: .none)
