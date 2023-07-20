@@ -47,12 +47,11 @@ public struct NotamFlag: Hashable {
         switch flagType {
         case .aerodrome:
             return NotamFlag.isTimeFrameActive(message: message)
-        case .closed:
+        case .closed, .ils, .ilsSubType, .tacan, .tacanNav, .vortac:
             return NotamFlag.closedForTimeFrame(message: message)
         default:
             return true
         }
-        
     }
     
     // TODO: add secondaryDate property that's assigned when making flag?
