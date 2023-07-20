@@ -181,10 +181,12 @@ public struct NOTAM: Decodable, Hashable {
         self.id = id
         
         // flag
-        flag = NotamFlag.makeFlag(text: message,
-                                  notamId: id,
-                                  notamType: type,
-                                  facilityDesignator: facilityDesignator)
+        flag = readAllMessagesForFlags(summaryMessage: message,
+                                       icaoMessage: icaoMessage,
+                                       domesticMessage: traditionalMessage,
+                                       notamId: id,
+                                       notamType: type,
+                                       facilityDesignator: facilityDesignator)
     }
     
     public init(from decoder: Decoder) throws {
@@ -260,13 +262,33 @@ public struct NOTAM: Decodable, Hashable {
         }
         
         // flag
-        flag = NotamFlag.makeFlag(text: message,
-                                  notamId: id,
-                                  notamType: type,
-                                  facilityDesignator: facilityDesignator)
+        flag = readAllMessagesForFlags(summaryMessage: message,
+                                       icaoMessage: icaoMessage,
+                                       domesticMessage: traditionalMessage,
+                                       notamId: id,
+                                       notamType: type,
+                                       facilityDesignator: facilityDesignator)
     }
     
     // MARK: - Helpers
+    
+    /// Takes in summary, icao, and domestic messages and reads through all to return first NotamFlag found.
+    private func readAllMessagesForFlags(summaryMessage: String?, icaoMessage: String?, domesticMessage: String?, notamId: String?, notamType: NotamType, facilityDesignator: String?) -> NotamFlag? {
+        
+        let allMessages = [summaryMessage, icaoMessage, domesticMessage]
+        
+        for message in allMessages {
+            if let potentialFlag = NotamFlag.makeFlag(text: message, notamId: notamId,
+                                                      notamType: notamType, facilityDesignator: facilityDesignator) {
+                return potentialFlag
+            }
+        }
+        
+        // TODO: should this be where we also assign ErrorFlag?
+        
+        // if we've read all 3 messages and haven't found flag, return nil
+        return nil
+    }
     
     public var isNotamAndFlagActive: Bool {
         return isActive && flag?.isFlagActive == true
