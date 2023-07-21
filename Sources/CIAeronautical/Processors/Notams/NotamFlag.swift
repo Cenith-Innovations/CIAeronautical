@@ -316,6 +316,165 @@ public struct NotamFlag: Hashable {
         return nil
     }
     
+    public static func possibleYearComp(word: String) -> Int? {
+        
+        // strip of non num characters
+        let result = word.filter("0123456789".contains)
+        
+        // check if count == 4
+        // first 2 chars should be made into Int
+        let charsArray = Array(result)
+        if charsArray.count == 4, let century = Int("\(charsArray[0])\(charsArray[1])"), century == 20, let year = Int(String(charsArray)) {
+            return year
+        }
+        
+        return nil
+    }
+    
+    /// Takes in a String that could be hour/mins word with "Z" or "L" at the end. Returns hour and mins or nil if we can't make into those components
+    public static func hourMinsWithTimezone(word: String) -> (hour: Int, mins: Int)? {
+        
+        // make sure we have a "Z" or "L"
+        guard word.contains("Z") || word.contains("L") else { return nil }
+        
+        // strip off non num characters
+        let result = word.filter("0123456789".contains)
+        
+        let charsArray = Array(result)
+        
+        // check if count == 4
+        // first 2 chars and last 2 chars should both be made into Ints
+        if charsArray.count == 4, let hour = Int("\(charsArray[0])\(charsArray[1])"), let mins = Int("\(charsArray[2])\(charsArray[3])") {
+        
+            // make sure we have valid hour and mins
+            if 0..<24 ~= hour && 0..<60 ~= mins {
+                return (hour, mins)
+            }
+        }
+        
+        return nil
+    }
+    
+    // TODO: make function that just takes in the 3-4 components and returns Date?
+    public static func dateFromTimeFrameComps(dayInt: Int, monthInt: Int, hour: Int, mins: Int, currDate: Date) -> Date? {
+    
+        // check if hourMins is in Zulu or Local
+        
+        // make sure year is 4 digits when stripped and that first 2 chars are "20" (ex: 2023)
+        
+            let timezone = TimeZone(abbreviation: "UTC")!
+            let cal = Calendar.current
+            if let nextDateYear = Calendar.current.dateComponents([.year], from: currDate).year {
+                let newDate = Calendar.current.date(from: DateComponents(calendar: cal,
+                                                                         timeZone: timezone,
+                                                                         year: nextDateYear,
+                                                                         month: monthInt,
+                                                                         day: dayInt,
+                                                                         hour: hour,
+                                                                         minute: mins))
+                return newDate
+            }
+        
+        
+        return nil
+    }
+    
+    /// Looks for a timeframe inside passed in message and only returns true if both Dates are valid and if current Date is within that range. Date entered is current date by default
+    public static func isSingleDateTimeFrameActive(message: String?, expirationDate: Date, currDate: Date = Date()) -> Bool {
+        
+        // TODO: look for first valid date to use as the start time
+        
+        // 1. Day
+        // 2. Month,
+        // 3. Year OR hours/mins (look for 5th char for hours/mins and "20" for first 2 chars for year). Also remove non alpha-nums
+        // 4. Check local timezone that's passed in
+        
+        guard let message = message else { return false }
+                
+        let words = Array(message.split(separator: " "))
+        let count = words.count
+        var i = 0
+        var startDate: Date?
+        
+        var foundTimeframe = false
+        
+        let monthDict = ["JAN": 1, "JANUARY": 1,
+                         "FEB": 2, "FEBRUARY": 2,
+                         "MAR": 3, "MARCH": 3,
+                         "APR": 4, "APRIL": 4,
+                         "MAY": 5,
+                         "JUN": 6, "JUNE": 6,
+                         "JUL": 7, "JULY": 7,
+                         "AUG": 8, "AUGUST": 8,
+                         "SEP": 9, "SEPTEMBER": 9,
+                         "OCT": 10, "OCTOBER": 10,
+                         "NOV": 11, "NOVEMBER": 11,
+                         "DEC": 12, "DECEMBER": 12]
+        
+        while i < count {
+            
+            let word = String(words[i])
+            
+            // look for start of timeframe (should be day Int portion)
+            if let day = hasDayInt(word: word), i + 2 < count {
+                // now look for next word which should be a month (abbr or spelled out)
+                let monthKeyword = String(words[i+1])
+                let thirdKeyword = String(words[i+2])
+                
+                // TODO: if i+2 is year, check if we can look at next word. If not, try with just year and use 0000Z as default
+                // TODO: if i+2 is hour/mins, try out all comps. Try next word anyway? use current year as default or use Calendar method to see?
+                
+                if let month = monthDict[monthKeyword] {
+                    // TODO: once we know we have a valid Day keyword followed by a valid Month keyword, then we can look for more
+                    // TODO: make sure we at least also have the year or hour/mins
+                    // TODO: plug in these components into function that returns Date?
+                    // TODO: still set foundTimeframe to true just in case??
+                    foundTimeframe = true
+                    
+                    
+                    // we have hour/mins
+                    if let possibleHourMins = hourMinsWithTimezone(word: thirdKeyword) {
+                        startDate = dateFromTimeFrameComps(dayInt: day,
+                                                           monthInt: month,
+                                                           hour: possibleHourMins.hour,
+                                                           mins: possibleHourMins.mins,
+                                                           currDate: Date())
+                        break
+                    }
+                    
+                    // we have year
+                    else if let year = possibleYearComp(word: thirdKeyword) {
+                        startDate = dateFromTimeFrameComps(dayInt: day,
+                                                           monthInt: month,
+                                                           hour: 0,
+                                                           mins: 0,
+                                                           currDate: Date())
+                        break
+                    }
+                    
+                }
+                
+            }
+            
+            i += 1
+        }
+                
+        if foundTimeframe {
+            if let start = startDate {
+                let now = Date()
+                if now >= start && now < expirationDate {
+                    print("start: \(start) end: \(expirationDate)")
+                    return true
+                }
+            }
+            
+            return false
+        }
+        
+        return true
+    }
+    
+    // TODO: replace this later with other aerodrome timeframe function
     /// Looks for a timeframe inside passed in message and only returns true if both Dates are valid and if current Date is within that range. Date entered is current date by default
     public static func isTimeFrameActive(message: String?, date: Date = Date()) -> Bool {
         
@@ -391,7 +550,6 @@ public struct NotamFlag: Hashable {
         
         return true
     }
-
     
     // TODO: make this potentially return nil so we can tell if there was an error reading possible timeframe?
     // TODO: new format to watch out for: "AERODROME CLSD 27 MAY @ 0530L - 30 MAY @ 0530L" ???

@@ -51,6 +51,52 @@ final class CIAeronauticalTests: XCTestCase {
         XCTAssertTrue(test3)
     }
     
+    func testHourMinsWithTimezone() throws {
+        let word1 = "2359Z"
+        let test1 = try XCTUnwrap(NotamFlag.hourMinsWithTimezone(word: word1))
+        XCTAssert(test1 == (23, 59))
+        
+        let word2 = "2359L"
+        let test2 = try XCTUnwrap(NotamFlag.hourMinsWithTimezone(word: word2))
+        XCTAssert(test2 == (23, 59))
+        
+        let word3 = "2460Z"
+        let test3 = NotamFlag.hourMinsWithTimezone(word: word3)
+        XCTAssert(test3 == nil)
+        
+        let word4 = "2023"
+        let test4 = NotamFlag.hourMinsWithTimezone(word: word4)
+        XCTAssert(test4 == nil)
+        
+        let word5 = "0000L"
+        let test5 = try XCTUnwrap(NotamFlag.hourMinsWithTimezone(word: word5))
+        XCTAssert(test5 == (0, 0))
+        
+        let word6 = "(0000Z)"
+        let test6 = try XCTUnwrap(NotamFlag.hourMinsWithTimezone(word: word6))
+        XCTAssert(test6 == (0, 0))
+    }
+    
+    func testIsSingleDateTimeFrameActive() {
+        // usually spelled out months have the year right after then hour/mins and abbreviated months have hour/mins right after
+        let message1 = "AERODROME CLOSED 5 JULY 2023"
+        let test1 = NotamFlag.isSingleDateTimeFrameActive(message: message1,
+                                                          expirationDate: Date().addingTimeInterval(-3600))
+        XCTAssertFalse(test1)
+        
+        // "AERODROME CLOSED 14 JULY 2023" // expiration date was 17 JULY 2023 1300Z
+        // "AERODROME AIRPORT CLOSED 21 SEP (2200L) - 25 SEP (0600L)"
+        // "AERODROME AIRPORT CLOSED 31 AUG (2200L) - 5 SEP (0600L)"
+        // "PMD AD AIRPORT CLSD AIRFIELD CLOSED 1 JULY 2023 (1230Z/0530L) &#150; 5 JULY 2023(1230Z/0530L) IN OBSERVANCE OF JULY 4TH HOLIDAY."
+        // "AERODROME CLSD 18 JUN 1500L TO 20 JUN 0700L (18 JUN 2200Z TO 20 JUN 1400Z)."
+        
+        let message2 = "AERODROME CLOSED 21 JULY 2023"
+        let test2 = NotamFlag.isSingleDateTimeFrameActive(message: message2,
+                                                          expirationDate: Date().addingTimeInterval(3600000000))
+        XCTAssertTrue(test2)
+        
+    }
+    
     func testWithinTimeFrame() {
         let test1 = NotamFlag.withinTimeFrame(start: 0, end: 2359, now: 1200)
         let test2 = NotamFlag.withinTimeFrame(start: 2200, end: 900, now: 700)
